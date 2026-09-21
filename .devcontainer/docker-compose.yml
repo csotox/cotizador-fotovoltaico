@@ -1,0 +1,51 @@
+services:
+  devcontainer:
+    build:
+      context: ..
+      dockerfile: ./.devcontainer/Dockerfile
+    container_name: cf-dev
+    volumes:
+      - ..:/workspace:cached
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    init: true
+    tty: true
+    stdin_open: true
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: cf-postgres
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: cf-pgadmin
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+
+volumes:
+  postgres-data:
+  pgadmin-data:
