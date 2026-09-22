@@ -24,6 +24,7 @@ Antes de realizar cambios, revisa la documentación del proyecto:
 - Mantener el código simple y legible.
 - Priorizar funcionalidades del MVP.
 - No almacenar secretos en el repositorio.
+- Al finalizar de leer este archivo deja un mensaje en el chat que indique: AGENTS leido
 
 ## Development workflow
 Antes de modificar código:
