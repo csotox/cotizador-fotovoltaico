@@ -8,6 +8,8 @@ Cotizador de sistemas fotovoltaicos.
 Antes de realizar cambios, revisa la documentación del proyecto:
 
 - `docs/product.md` Definición del proyecto, alcance, MVP.
+- `docs/architecture.md` — Arquitectura, módulos y restricciones técnicas del proyecto.
+- `docs/domain.md` — Conceptos del dominio, responsabilidades y relaciones entre entidades.
 
 ## Stack
 - Python 3.13
