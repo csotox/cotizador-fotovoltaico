@@ -51,3 +51,21 @@ Después de realizar cambios:
 - Ejecutar tests relacionados si existen.
 - Verificar que no existan errores evidentes.
 
+## Convenciones de modelos Django
+
+- Todos los modelos de negocio deben utilizar un `id` autoincremental como clave primaria interna.
+- El campo `id` es de uso interno y no debe exponerse en URLs, formularios ni interfaces públicas.
+- Todos los modelos de negocio deben incluir un campo `uuid` versión 4.
+- El `uuid` debe ser único y no editable.
+- El `uuid` será el identificador utilizado en URLs y referencias expuestas al frontend.
+
+Código esperado en un modelo de Django:
+~~~ Python
+id = models.BigAutoField(primary_key=True)
+
+uuid = models.UUIDField(
+    default=uuid.uuid4,
+    unique=True,
+    editable=False
+)
+~~~
