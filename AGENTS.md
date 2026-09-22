@@ -3,6 +3,12 @@
 ## Project
 Cotizador de sistemas fotovoltaicos.
 
+## Documentación del projecto
+
+Antes de realizar cambios, revisa la documentación del proyecto:
+
+- `docs/product.md` Definición del proyecto, alcance, MVP.
+
 ## Stack
 - Python 3.13
 - Django 6.1
