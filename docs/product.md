@@ -14,6 +14,7 @@ Ingresar datos básicos del cliente y del proyecto para obtener una cotización 
 
 ## Alcance del MVP
 
+- Gestionar compañias.
 - Gestionar clientes.
 - Gestionar productos principales.
 - Crear cotizaciones.
