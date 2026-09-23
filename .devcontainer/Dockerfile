@@ -5,6 +5,7 @@ WORKDIR /workspace
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     cloc \
@@ -33,7 +34,9 @@ RUN npm install -g pyright
 COPY ./.devcontainer/requirements.txt .
 
 RUN python -m pip install --upgrade pip setuptools wheel \
-    && pip install --no-cache-dir -r requirements.txt
+    && pip install --no-cache-dir -r requirements.txt \
+    && python -m playwright install --with-deps chromium \
+    && chmod -R 755 /ms-playwright
 
 # Crear usuario vscode
 RUN useradd -m -s /bin/bash vscode \
