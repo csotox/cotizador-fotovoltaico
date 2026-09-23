@@ -1,7 +1,16 @@
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.forms import EmailField
+
+FORM_CONTROL = "form-control"
+
+
+class LoginForm(AuthenticationForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs["class"] = FORM_CONTROL
 
 
 class RegistrationForm(UserCreationForm):
@@ -10,6 +19,11 @@ class RegistrationForm(UserCreationForm):
     class Meta:
         model = User
         fields = ("username", "email")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            field.widget.attrs["class"] = FORM_CONTROL
 
     def clean_email(self):
         email = self.cleaned_data["email"].lower()
