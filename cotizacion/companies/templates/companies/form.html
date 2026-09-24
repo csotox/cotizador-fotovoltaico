@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Nueva empresa{% endblock %}
+
+{% block content %}
+<h1 class="h3">Crear empresa</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% include "partials/_form_fields.html" %}
+            <button type="submit" class="btn btn-primary">Guardar</button>
+            <a href="{% url 'companies:list' %}" class="btn btn-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

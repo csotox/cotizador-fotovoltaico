@@ -1,0 +1,272 @@
+from django.contrib.auth.models import User
+from django.test import TestCase
+from django.urls import reverse
+
+from .models import Company
+
+VALID_RUT = "12.345.678-5"
+
+
+def make_user(username="vendedor"):
+    return User.objects.create_user(username=username, password="clave-segura-123")
+
+
+def make_company(created_by, **kwargs):
+    defaults = {
+        "name": "Energía Solar SpA",
+        "alias": "ES",
+        "address": "Av. Siempre Viva 123",
+        "rut": VALID_RUT,
+        "email": "contacto@energiasolar.cl",
+    }
+    defaults.update(kwargs)
+    return Company.objects.create(created_by=created_by, **defaults)
+
+
+class CompanyModelTests(TestCase):
+    def test_uuid_auto_generated_and_unique(self):
+        user = make_user()
+        first = make_company(created_by=user, email="a@example.com", rut="12.345.678-5")
+        second = make_company(created_by=user, email="b@example.com", rut="11.111.111-1")
+        self.assertIsNotNone(first.uuid)
+        self.assertNotEqual(first.uuid, second.uuid)
+
+    def test_created_at_and_updated_at_set(self):
+        company = make_company(created_by=make_user())
+        self.assertIsNotNone(company.created_at)
+        self.assertIsNotNone(company.updated_at)
+
+
+class SoftDeleteTests(TestCase):
+    def test_delete_soft_deletes(self):
+        company = make_company(created_by=make_user())
+        company.delete()
+        company.refresh_from_db()
+        self.assertIsNotNone(company.deleted_at)
+        self.assertEqual(Company.objects.count(), 0)
+        self.assertEqual(Company.objects.all_with_deleted().count(), 1)
+
+    def test_default_queryset_excludes_deleted(self):
+        user = make_user()
+        alive = make_company(created_by=user)
+        deleted = make_company(created_by=user, email="b@example.com", rut="11.111.111-1")
+        deleted.delete()
+        self.assertEqual(list(Company.objects.all()), [alive])
+
+    def test_dead_returns_only_deleted(self):
+        user = make_user()
+        alive = make_company(created_by=user)
+        deleted = make_company(created_by=user, email="b@example.com", rut="11.111.111-1")
+        deleted.delete()
+        dead = list(Company.objects.dead())
+        self.assertEqual(dead, [deleted])
+        self.assertNotIn(alive, dead)
+
+    def test_hard_delete_removes_row(self):
+        company = make_company(created_by=make_user())
+        company.hard_delete()
+        self.assertEqual(Company.objects.all_with_deleted().count(), 0)
+
+    def test_queryset_delete_soft_deletes(self):
+        user = make_user()
+        company = make_company(created_by=user)
+        Company.objects.filter(pk=company.pk).delete()
+        self.assertEqual(Company.objects.count(), 0)
+        self.assertEqual(Company.objects.all_with_deleted().count(), 1)
+
+
+class CompanyFormValidationTests(TestCase):
+    def _post(self, **overrides):
+        data = {
+            "name": "Energía Solar SpA",
+            "alias": "ES",
+            "address": "Av. Siempre Viva 123",
+            "rut": VALID_RUT,
+            "email": "contacto@energiasolar.cl",
+        }
+        data.update(overrides)
+        return self.client.post(reverse("companies:create"), data)
+
+    def setUp(self):
+        self.user = make_user()
+        self.client.force_login(self.user)
+
+    def test_blank_name_rejected(self):
+        response = self._post(name="")
+        self.assertFormError(response.context["form"], "name", "This field is required.")
+
+    def test_invalid_rut_rejected(self):
+        response = self._post(rut="76.123.456-7")
+        self.assertFormError(
+            response.context["form"], "rut", "El RUT ingresado no es válido."
+        )
+
+    def test_rut_requires_alphanumeric_format(self):
+        response = self._post(rut="no-es-un-rut")
+        self.assertFormError(response.context["form"], "rut", "Ingresa un RUT válido.")
+
+    def test_duplicate_rut_rejected(self):
+        make_company(created_by=self.user)
+        response = self._post(name="Otra Empresa", email="otra@example.com")
+        self.assertFormError(
+            response.context["form"], "rut", "Ya existe una empresa con este RUT."
+        )
+
+    def test_blank_email_rejected(self):
+        response = self._post(email="")
+        self.assertFormError(response.context["form"], "email", "This field is required.")
+
+    def test_invalid_email_rejected(self):
+        response = self._post(email="correo-invalido")
+        self.assertFormError(
+            response.context["form"], "email", "Enter a valid email address."
+        )
+
+    def test_duplicate_email_rejected_case_insensitive(self):
+        make_company(created_by=self.user)
+        response = self._post(name="Otra Empresa", rut="11.111.111-1")
+        self.assertFormError(
+            response.context["form"],
+            "email",
+            "Ya existe una empresa con este correo.",
+        )
+
+    def test_email_normalized_to_lowercase(self):
+        response = self._post(email="CONTACTO@ENERGIASOLAR.CL")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(
+            Company.objects.get().email, "contacto@energiasolar.cl"
+        )
+
+    def test_rut_normalized_to_dotted_format(self):
+        response = self._post(rut="12345678-5")
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Company.objects.get().rut, "12.345.678-5")
+
+
+class CompanyCreateViewTests(TestCase):
+    def test_create_requires_login(self):
+        response = self.client.get(reverse("companies:create"))
+        self.assertRedirects(
+            response, f"{reverse('login')}?next={reverse('companies:create')}"
+        )
+
+    def test_staff_cannot_create_get(self):
+        staff = User.objects.create_user(
+            username="staff",
+            password="clave-segura-123",
+            is_staff=True,
+        )
+        self.client.force_login(staff)
+        response = self.client.get(reverse("companies:create"))
+        self.assertEqual(response.status_code, 403)
+
+    def test_staff_cannot_create_post(self):
+        staff = User.objects.create_user(
+            username="staff",
+            password="clave-segura-123",
+            is_staff=True,
+        )
+        self.client.force_login(staff)
+        response = self.client.post(
+            reverse("companies:create"),
+            {
+                "name": "Staff SpA",
+                "rut": VALID_RUT,
+                "email": "staff@example.com",
+            },
+        )
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(Company.objects.count(), 0)
+
+    def test_valid_create_links_user_and_redirects_to_detail(self):
+        user = make_user()
+        self.client.force_login(user)
+        response = self.client.post(
+            reverse("companies:create"),
+            {
+                "name": "Energía Solar SpA",
+                "alias": "ES",
+                "address": "Av. Siempre Viva 123",
+                "rut": VALID_RUT,
+                "email": "contacto@energiasolar.cl",
+            },
+        )
+        company = Company.objects.get()
+        self.assertRedirects(
+            response,
+            reverse("companies:detail", kwargs={"uuid": company.uuid}),
+        )
+        self.assertEqual(company.created_by, user)
+
+
+class CompanyListViewTests(TestCase):
+    def test_list_requires_login(self):
+        response = self.client.get(reverse("companies:list"))
+        self.assertRedirects(
+            response, f"{reverse('login')}?next={reverse('companies:list')}"
+        )
+
+    def test_list_only_shows_own_companies(self):
+        owner = make_user("owner")
+        other = make_user("other")
+        make_company(created_by=owner)
+        make_company(created_by=other, email="other@example.com", rut="11.111.111-1")
+        self.client.force_login(owner)
+        response = self.client.get(reverse("companies:list"))
+        self.assertEqual(len(response.context["companies"]), 1)
+        self.assertEqual(response.context["companies"][0].created_by, owner)
+
+    def test_list_has_create_link(self):
+        user = make_user()
+        make_company(created_by=user)
+        self.client.force_login(user)
+        response = self.client.get(reverse("companies:list"))
+        self.assertContains(response, reverse("companies:create"))
+
+
+class CompanyDetailViewTests(TestCase):
+    def test_detail_requires_login(self):
+        company = make_company(created_by=make_user())
+        response = self.client.get(
+            reverse("companies:detail", kwargs={"uuid": company.uuid})
+        )
+        self.assertRedirects(
+            response,
+            f"{reverse('login')}?next={reverse('companies:detail', kwargs={'uuid': company.uuid})}",
+        )
+
+    def test_detail_uses_uuid_url(self):
+        company = make_company(created_by=make_user())
+        url = reverse("companies:detail", kwargs={"uuid": company.uuid})
+        self.assertEqual(url, f"/companies/{company.uuid}/")
+        self.assertNotEqual(url.rsplit("/")[-2], "id")
+
+    def test_detail_accessible_to_owner(self):
+        user = make_user()
+        company = make_company(created_by=user)
+        self.client.force_login(user)
+        response = self.client.get(
+            reverse("companies:detail", kwargs={"uuid": company.uuid})
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, company.name)
+
+    def test_detail_not_accessible_to_other_user(self):
+        owner = make_user("owner")
+        company = make_company(created_by=owner)
+        self.client.force_login(make_user("other"))
+        response = self.client.get(
+            reverse("companies:detail", kwargs={"uuid": company.uuid})
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_detail_not_accessible_for_deleted_company(self):
+        user = make_user()
+        company = make_company(created_by=user)
+        company.delete()
+        self.client.force_login(user)
+        response = self.client.get(
+            reverse("companies:detail", kwargs={"uuid": company.uuid})
+        )
+        self.assertEqual(response.status_code, 404)

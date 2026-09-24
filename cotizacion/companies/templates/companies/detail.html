@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}{{ company.name }}{% endblock %}
+
+{% block content %}
+<h1 class="h3">{{ company.name }}</h1>
+
+<dl class="row">
+    <dt class="col-sm-3">Alias</dt>
+    <dd class="col-sm-9">{{ company.alias }}</dd>
+
+    <dt class="col-sm-3">Dirección</dt>
+    <dd class="col-sm-9">{{ company.address }}</dd>
+
+    <dt class="col-sm-3">RUT</dt>
+    <dd class="col-sm-9">{{ company.rut }}</dd>
+
+    <dt class="col-sm-3">Email</dt>
+    <dd class="col-sm-9">{{ company.email }}</dd>
+</dl>
+
+<a href="{% url 'companies:list' %}" class="btn btn-secondary">Volver</a>
+{% endblock %}

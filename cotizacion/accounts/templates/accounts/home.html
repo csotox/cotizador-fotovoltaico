@@ -5,4 +5,8 @@
 {% block content %}
 <h1 class="h3">Bienvenido, {{ user.username }}</h1>
 <p class="text-muted">Aquí se mostrarán las cotizaciones del módulo correspondiente del MVP.</p>
+{% if not user.is_staff %}
+    <a class="btn btn-primary" href="{% url 'companies:create' %}">Crear empresa</a>
+    <a class="btn btn-outline-primary" href="{% url 'companies:list' %}">Mis empresas</a>
+{% endif %}
 {% endblock %}

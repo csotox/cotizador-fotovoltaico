@@ -11,9 +11,12 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container-fluid">
             <a class="navbar-brand" href="{% url 'home' %}">Cotizador</a>
-            <div class="d-flex">
+            <div class="d-flex align-items-center gap-2">
                 {% if user.is_authenticated %}
-                    <span class="navbar-text me-3">{{ user.username }}</span>
+                    {% if not user.is_staff %}
+                        <a class="nav-link" href="{% url 'companies:list' %}">Empresas</a>
+                    {% endif %}
+                    <span class="navbar-text">{{ user.username }}</span>
                     <form method="post" action="{% url 'logout' %}">
                         {% csrf_token %}
                         <button type="submit" class="btn btn-outline-secondary btn-sm">Cerrar sesión</button>
