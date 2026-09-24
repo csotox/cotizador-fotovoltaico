@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}{{ customer.name }}{% endblock %}
+
+{% block content %}
+<h1 class="h3">{{ customer.name }}</h1>
+<p class="text-muted">{{ customer.company.name }}</p>
+
+<dl class="row">
+    <dt class="col-sm-3">Dirección</dt>
+    <dd class="col-sm-9">{{ customer.address }}</dd>
+    <dt class="col-sm-3">Email</dt>
+    <dd class="col-sm-9">{{ customer.email }}</dd>
+    <dt class="col-sm-3">Teléfono</dt>
+    <dd class="col-sm-9">{{ customer.phone }}</dd>
+    <dt class="col-sm-3">Comuna</dt>
+    <dd class="col-sm-9">{{ customer.commune }}</dd>
+    <dt class="col-sm-3">Forma de pago</dt>
+    <dd class="col-sm-9">{{ customer.get_payment_method_display }}</dd>
+</dl>
+
+<div class="d-flex gap-2">
+    <button type="button" class="btn btn-primary" data-modal-open="{% url 'customers:update' customer.uuid %}?form=modal" data-modal-title="Editar {{ customer.name }}">Editar</button>
+    <a href="{% url 'customers:list' %}" class="btn btn-secondary">Volver</a>
+</div>
+{% endblock %}

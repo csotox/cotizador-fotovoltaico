@@ -93,7 +93,7 @@ class CompanyFormValidationTests(TestCase):
 
     def test_blank_name_rejected(self):
         response = self._post(name="")
-        self.assertFormError(response.context["form"], "name", "This field is required.")
+        self.assertFormError(response.context["form"], "name", "Este campo es obligatorio.")
 
     def test_invalid_rut_rejected(self):
         response = self._post(rut="76.123.456-7")
@@ -114,12 +114,12 @@ class CompanyFormValidationTests(TestCase):
 
     def test_blank_email_rejected(self):
         response = self._post(email="")
-        self.assertFormError(response.context["form"], "email", "This field is required.")
+        self.assertFormError(response.context["form"], "email", "Este campo es obligatorio.")
 
     def test_invalid_email_rejected(self):
         response = self._post(email="correo-invalido")
         self.assertFormError(
-            response.context["form"], "email", "Enter a valid email address."
+            response.context["form"], "email", "Introduzca una dirección de correo electrónico válida."
         )
 
     def test_duplicate_email_rejected_case_insensitive(self):
@@ -407,7 +407,7 @@ class CompanyModalFormTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, "companies/_form.html")
-        self.assertContains(response, "This field is required.")
+        self.assertContains(response, "Este campo es obligatorio.")
 
     def test_update_modal_returns_partial_with_action(self):
         company = make_company(created_by=self.user)

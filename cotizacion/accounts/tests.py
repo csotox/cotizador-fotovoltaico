@@ -42,7 +42,7 @@ class SignUpViewTests(TestCase):
         self.assertFormError(
             response.context["form"],
             "username",
-            "A user with that username already exists.",
+            "Ya existe un usuario con este nombre.",
         )
 
     def test_duplicate_email_rejected(self):
@@ -91,7 +91,7 @@ class SignUpViewTests(TestCase):
             },
         )
         self.assertEqual(response.status_code, 200)
-        self.assertFormError(response.context["form"], "email", "This field is required.")
+        self.assertFormError(response.context["form"], "email", "Este campo es obligatorio.")
 
     def test_password_mismatch_rejected(self):
         response = self.client.post(
@@ -107,7 +107,7 @@ class SignUpViewTests(TestCase):
         self.assertFormError(
             response.context["form"],
             "password2",
-            "The two password fields didn’t match.",
+            "Los dos campos de contraseña no coinciden.",
         )
 
     def test_common_password_rejected(self):
@@ -173,11 +173,7 @@ class LoginTests(TestCase):
             {"username": "no-existe", "password": "clave-segura-123"},
         )
         self.assertEqual(response.status_code, 200)
-        self.assertFormError(
-            response.context["form"],
-            None,
-            "Please enter a correct username and password. Note that both fields may be case-sensitive.",
-        )
+        self.assertContains(response, "Por favor, introduzca un nombre de usuario y clave correctos.")
 
 
 class HomeViewTests(TestCase):

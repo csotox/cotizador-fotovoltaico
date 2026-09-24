@@ -15,7 +15,8 @@
             <div class="d-flex align-items-center gap-2">
                 {% if user.is_authenticated %}
                     {% if not user.is_staff %}
-                        <a class="nav-link" href="{% url 'home' %}">Empresas</a>
+                        <a class="nav-link" href="{% url 'home' %}">Compañías</a>
+                        <a class="nav-link" href="{% url 'customers:list' %}">Clientes</a>
                     {% endif %}
                     <span class="navbar-text">{{ user.username }}</span>
                     <form method="post" action="{% url 'logout' %}">

@@ -22,6 +22,9 @@ class CompanyCreateView(LoginRequiredMixin, ModalFormMixin, SuccessMessageMixin,
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
+        if Company.objects.filter(created_by=self.request.user).exists():
+            form.add_error(None, "Ya tienes una compañía activa.")
+            return self.form_invalid(form)
         form.instance.created_by = self.request.user
         return super().form_valid(form)
 
