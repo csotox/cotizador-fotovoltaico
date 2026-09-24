@@ -1,8 +1,8 @@
 # Dominio del proyecto
 
-## Empresa
+## Empresa o compañía
 
-Representa a la organización que utiliza el sistema.
+Representa a la organización que utiliza el sistema y emite las cotizaciones. En este documento se conserva el nombre técnico `Company`; el nombre de negocio preferred es **compañía** para diferenciarla de una empresa que puede ser cliente.
 
 Responsabilidades:
 
@@ -14,10 +14,11 @@ Responsabilidades:
 
 Relaciones:
 
-- Una empresa puede tener varios usuarios.
-- Una empresa puede tener varios clientes.
-- Una empresa puede tener varios productos.
-- Una empresa puede tener varias cotizaciones.
+- Una compañía puede tener varios usuarios.
+- Una compañía puede tener varios clientes.
+- Una compañía puede tener varios productos.
+- Una compañía puede tener varias cotizaciones.
+- Un usuario no staff puede tener una sola compañía activa como regla de negocio.
 
 ---
 

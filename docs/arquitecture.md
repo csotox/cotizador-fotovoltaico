@@ -9,11 +9,19 @@
 - jQuery para interacciones simples en el frontend.
 
 ## Modelo SaaS
-
 - Base de datos compartida.
 - Los datos deben estar aislados por empresa.
 - Cada registro de negocio debe pertenecer a una empresa.
 - Un usuario solo puede acceder a información de las empresas a las que pertenece.
+
+## Contexto chileno
+- El sistema está diseñado para operar en Chile.
+- La configuración regional debe utilizar español de Chile (`es-CL`) y la zona horaria `America/Santiago`.
+- Las montos y cotizaciones se expresarán en pesos chilenos (CLP).
+- Los RUT se validarán según el formato y algoritmo chileno.
+- Las comunas se gestionarán mediante un catálogo de referencia chileno.
+- Una compañía es la organización que emite cotizaciones; una empresa puede ser un cliente persona jurídica.
+
 
 ## Módulos principales (Aplicaciones Django)
 
