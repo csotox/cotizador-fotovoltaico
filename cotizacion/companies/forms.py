@@ -19,12 +19,18 @@ class CompanyForm(forms.ModelForm):
 
     def clean_email(self):
         email = self.cleaned_data["email"].lower()
-        if Company.objects.filter(email__iexact=email).exists():
+        queryset = Company.objects.filter(email__iexact=email)
+        if self.instance.pk:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
             raise ValidationError("Ya existe una empresa con este correo.")
         return email
 
     def clean_rut(self):
         rut = validate_rut(self.cleaned_data["rut"])
-        if Company.objects.filter(rut=rut).exists():
+        queryset = Company.objects.filter(rut=rut)
+        if self.instance.pk:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
             raise ValidationError("Ya existe una empresa con este RUT.")
         return rut

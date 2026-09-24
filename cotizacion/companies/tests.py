@@ -272,6 +272,72 @@ class CompanyDetailViewTests(TestCase):
         self.assertEqual(response.status_code, 404)
 
 
+class CompanyUpdateViewTests(TestCase):
+    def _update_url(self, company):
+        return reverse("companies:update", kwargs={"uuid": company.uuid})
+
+    def _data(self, **overrides):
+        data = {
+            "name": "Energía Solar Actualizada SpA",
+            "alias": "ESA",
+            "rut": VALID_RUT,
+            "email": "contacto@energiasolar.cl",
+        }
+        data.update(overrides)
+        return data
+
+    def test_update_requires_login(self):
+        company = make_company(created_by=make_user())
+        response = self.client.get(self._update_url(company))
+        self.assertRedirects(
+            response,
+            f"{reverse('login')}?next={self._update_url(company)}",
+        )
+
+    def test_staff_cannot_update(self):
+        staff = User.objects.create_user(
+            username="staff",
+            password="clave-segura-123",
+            is_staff=True,
+        )
+        company = make_company(created_by=staff)
+        self.client.force_login(staff)
+        response = self.client.post(self._update_url(company), self._data())
+        self.assertEqual(response.status_code, 403)
+        company.refresh_from_db()
+        self.assertEqual(company.name, "Energía Solar SpA")
+
+    def test_owner_can_update_and_redirects_to_detail(self):
+        user = make_user()
+        company = make_company(created_by=user)
+        self.client.force_login(user)
+        response = self.client.post(self._update_url(company), self._data())
+        self.assertRedirects(
+            response,
+            reverse("companies:detail", kwargs={"uuid": company.uuid}),
+        )
+        company.refresh_from_db()
+        self.assertEqual(company.name, "Energía Solar Actualizada SpA")
+        self.assertEqual(company.alias, "ESA")
+
+    def test_cannot_update_other_users_company(self):
+        owner = make_user("owner")
+        company = make_company(created_by=owner)
+        self.client.force_login(make_user("other"))
+        response = self.client.post(self._update_url(company), self._data())
+        self.assertEqual(response.status_code, 404)
+        company.refresh_from_db()
+        self.assertEqual(company.name, "Energía Solar SpA")
+
+    def test_cannot_update_deleted_company(self):
+        user = make_user()
+        company = make_company(created_by=user)
+        company.delete()
+        self.client.force_login(user)
+        response = self.client.post(self._update_url(company), self._data())
+        self.assertEqual(response.status_code, 404)
+
+
 class CompanyDeleteViewTests(TestCase):
     def _delete_url(self, company):
         return reverse("companies:delete", kwargs={"uuid": company.uuid})

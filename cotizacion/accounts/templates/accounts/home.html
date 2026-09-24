@@ -27,10 +27,13 @@
                         <td>{{ company.rut }}</td>
                         <td>{{ company.email }}</td>
                         <td>
-                            <form method="post" action="{% url 'companies:delete' company.uuid %}">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar esta empresa?');">Eliminar</button>
-                            </form>
+                            <div class="d-flex gap-2">
+                                <a class="btn btn-outline-secondary btn-sm" href="{% url 'companies:update' company.uuid %}">Editar</a>
+                                <form method="post" action="{% url 'companies:delete' company.uuid %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar esta empresa?');">Eliminar</button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                 {% endfor %}
