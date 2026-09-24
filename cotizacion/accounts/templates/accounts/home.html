@@ -16,6 +16,7 @@
                     <th scope="col">Alias</th>
                     <th scope="col">RUT</th>
                     <th scope="col">Email</th>
+                    <th scope="col">Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -25,6 +26,12 @@
                         <td>{{ company.alias }}</td>
                         <td>{{ company.rut }}</td>
                         <td>{{ company.email }}</td>
+                        <td>
+                            <form method="post" action="{% url 'companies:delete' company.uuid %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar esta empresa?');">Eliminar</button>
+                            </form>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>

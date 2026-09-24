@@ -270,3 +270,55 @@ class CompanyDetailViewTests(TestCase):
             reverse("companies:detail", kwargs={"uuid": company.uuid})
         )
         self.assertEqual(response.status_code, 404)
+
+
+class CompanyDeleteViewTests(TestCase):
+    def _delete_url(self, company):
+        return reverse("companies:delete", kwargs={"uuid": company.uuid})
+
+    def test_delete_requires_login(self):
+        company = make_company(created_by=make_user())
+        response = self.client.post(self._delete_url(company))
+        self.assertRedirects(
+            response,
+            f"{reverse('login')}?next={self._delete_url(company)}",
+        )
+
+    def test_staff_cannot_delete(self):
+        staff = User.objects.create_user(
+            username="staff",
+            password="clave-segura-123",
+            is_staff=True,
+        )
+        company = make_company(created_by=staff)
+        self.client.force_login(staff)
+        response = self.client.post(self._delete_url(company))
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(Company.objects.count(), 1)
+
+    def test_owner_delete_is_soft_and_redirects_to_home(self):
+        user = make_user()
+        company = make_company(created_by=user)
+        self.client.force_login(user)
+        response = self.client.post(self._delete_url(company))
+        self.assertRedirects(response, reverse("home"))
+        company.refresh_from_db()
+        self.assertIsNotNone(company.deleted_at)
+        self.assertEqual(Company.objects.count(), 0)
+        self.assertEqual(Company.objects.all_with_deleted().count(), 1)
+
+    def test_cannot_delete_other_users_company(self):
+        owner = make_user("owner")
+        company = make_company(created_by=owner)
+        self.client.force_login(make_user("other"))
+        response = self.client.post(self._delete_url(company))
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(Company.objects.all_with_deleted().count(), 1)
+
+    def test_get_does_not_delete(self):
+        user = make_user()
+        company = make_company(created_by=user)
+        self.client.force_login(user)
+        response = self.client.get(self._delete_url(company))
+        self.assertEqual(response.status_code, 405)
+        self.assertEqual(Company.objects.count(), 1)
