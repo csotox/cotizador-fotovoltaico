@@ -1,6 +1,8 @@
 from playwright.sync_api import sync_playwright
+import pytest
 
 
+@pytest.mark.e2e
 def test_home():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
