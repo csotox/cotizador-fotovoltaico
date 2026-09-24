@@ -4,6 +4,8 @@ from django.shortcuts import render
 from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView
 
+from companies.models import Company
+
 from .forms import RegistrationForm
 
 
@@ -16,4 +18,7 @@ class SignUpView(SuccessMessageMixin, CreateView):
 
 @login_required
 def home(request):
-    return render(request, "accounts/home.html")
+    companies = Company.objects.none()
+    if not request.user.is_staff:
+        companies = Company.objects.filter(created_by=request.user).order_by("-created_at")
+    return render(request, "accounts/home.html", {"companies": companies})
