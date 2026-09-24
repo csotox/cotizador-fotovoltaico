@@ -6,13 +6,14 @@ from django.views.generic import DetailView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from .forms import CompanyForm
+from .mixins import ModalFormMixin
 from .models import Company
 
 
-class CompanyCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+class CompanyCreateView(LoginRequiredMixin, ModalFormMixin, SuccessMessageMixin, CreateView):
     model = Company
     form_class = CompanyForm
-    template_name = "companies/form.html"
+    template_name = "companies/_form.html"
     success_message = "Empresa creada exitosamente."
 
     def dispatch(self, request, *args, **kwargs):
@@ -38,10 +39,10 @@ class CompanyDetailView(LoginRequiredMixin, DetailView):
         return Company.objects.filter(created_by=self.request.user)
 
 
-class CompanyUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+class CompanyUpdateView(LoginRequiredMixin, ModalFormMixin, SuccessMessageMixin, UpdateView):
     model = Company
     form_class = CompanyForm
-    template_name = "companies/form.html"
+    template_name = "companies/_form.html"
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
     success_message = "Empresa actualizada exitosamente."

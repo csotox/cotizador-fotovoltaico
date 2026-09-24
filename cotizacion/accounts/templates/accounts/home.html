@@ -28,7 +28,7 @@
                         <td>{{ company.email }}</td>
                         <td>
                             <div class="d-flex gap-2">
-                                <a class="btn btn-outline-secondary btn-sm" href="{% url 'companies:update' company.uuid %}">Editar</a>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-modal-open="{% url 'companies:update' company.uuid %}?form=modal" data-modal-title="Editar {{ company.name }}">Editar</button>
                                 <form method="post" action="{% url 'companies:delete' company.uuid %}">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar esta empresa?');">Eliminar</button>
@@ -43,6 +43,6 @@
         <p class="alert alert-warning" role="alert">Aún no has creado una empresa.</p>
     {% endif %}
 
-    <a class="btn btn-primary" href="{% url 'companies:create' %}">Crear empresa</a>
+    <button type="button" class="btn btn-primary" data-modal-open="{% url 'companies:create' %}?form=modal" data-modal-title="Crear empresa">Crear empresa</button>
 {% endif %}
 {% endblock %}

@@ -363,3 +363,103 @@ class CompanyDeleteViewTests(TestCase):
         response = self.client.get(self._delete_url(company))
         self.assertEqual(response.status_code, 405)
         self.assertEqual(Company.objects.count(), 1)
+
+
+class CompanyModalFormTests(TestCase):
+    def setUp(self):
+        self.user = make_user()
+        self.client.force_login(self.user)
+
+    def _valid_data(self, **overrides):
+        data = {
+            "name": "Energía Solar SpA",
+            "alias": "ES",
+            "address": "Av. Siempre Viva 123",
+            "rut": VALID_RUT,
+            "email": "contacto@energiasolar.cl",
+            "form": "modal",
+        }
+        data.update(overrides)
+        return data
+
+    def test_create_modal_returns_partial(self):
+        response = self.client.get(
+            reverse("companies:create"), {"form": "modal"}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "companies/_form.html")
+        self.assertNotContains(response, "<html")
+        self.assertContains(response, "<form")
+
+    def test_create_modal_success_returns_json(self):
+        response = self.client.post(
+            reverse("companies:create"), self._valid_data()
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"success": True})
+        company = Company.objects.get()
+        self.assertEqual(company.created_by, self.user)
+
+    def test_create_modal_invalid_renders_partial_with_errors(self):
+        response = self.client.post(
+            reverse("companies:create"),
+            self._valid_data(name=""),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "companies/_form.html")
+        self.assertContains(response, "This field is required.")
+
+    def test_update_modal_returns_partial_with_action(self):
+        company = make_company(created_by=self.user)
+        response = self.client.get(
+            reverse("companies:update", kwargs={"uuid": company.uuid}),
+            {"form": "modal"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "companies/_form.html")
+        self.assertContains(
+            response,
+            reverse("companies:update", kwargs={"uuid": company.uuid}),
+        )
+
+    def test_update_modal_success_returns_json(self):
+        company = make_company(created_by=self.user)
+        response = self.client.post(
+            reverse("companies:update", kwargs={"uuid": company.uuid}),
+            self._valid_data(name="Energía Solar Actualizada SpA"),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"success": True})
+        company.refresh_from_db()
+        self.assertEqual(company.name, "Energía Solar Actualizada SpA")
+
+    def test_update_modal_invalid_renders_partial_with_errors(self):
+        company = make_company(created_by=self.user)
+        response = self.client.post(
+            reverse("companies:update", kwargs={"uuid": company.uuid}),
+            self._valid_data(rut="76.123.456-7"),
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "companies/_form.html")
+        self.assertContains(response, "El RUT ingresado no es válido.")
+
+    def test_modal_staff_forbidden(self):
+        staff = User.objects.create_user(
+            username="staff",
+            password="clave-segura-123",
+            is_staff=True,
+        )
+        self.client.force_login(staff)
+        response = self.client.get(
+            reverse("companies:create"), {"form": "modal"}
+        )
+        self.assertEqual(response.status_code, 403)
+
+    def test_update_modal_other_user_404(self):
+        owner = make_user("owner")
+        company = make_company(created_by=owner)
+        response = self.client.post(
+            reverse("companies:update", kwargs={"uuid": company.uuid}),
+            self._valid_data(),
+        )
+        self.assertEqual(response.status_code, 404)
