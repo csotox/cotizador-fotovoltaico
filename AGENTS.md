@@ -51,6 +51,21 @@ Después de realizar cambios:
 - Ejecutar tests relacionados si existen.
 - Verificar que no existan errores evidentes.
 
+## Testing
+Reglas obligatorias al ejecutar tests:
+
+- Todos los tests, unitarios y E2E/Playwright, se ejecutan contra la base de datos de test `test_cotizador`.
+- Prohibido ejecutar tests contra la base de datos de desarrollo (`cotizador`).
+- Prohibido sembrar o inspeccionar datos con `manage.py shell`, `manage.py dbshell` o scripts dentro de los tests.
+  - Tests unitarios: usar el ORM con las fixtures `django_db` (o el test runner de Django).
+  - Tests E2E: usar la fixture `live_server` de pytest-django y sembrar con el ORM dentro del test.
+- Prohibido ejecutar tests E2E contra `http://localhost:8000` (servidor de desarrollo humano). Usar `live_server`.
+- Prohibido apuntar `POSTGRES_DB` ni settings a la base de datos de desarrollo en contexto de test.
+- Comandos canónicos:
+  - Tests unitarios: `pytest`.
+  - Tests E2E: `pytest -m e2e` (no requiere servidor externo; `live_server` levanta uno sobre la BD de test).
+- Después de ejecutar tests, verificar que la BD de desarrollo no recibió escrituras.
+
 ## Convenciones de modelos Django
 
 - Todos los modelos de negocio deben utilizar un `id` autoincremental como clave primaria interna.
