@@ -200,31 +200,6 @@ class CompanyCreateViewTests(TestCase):
         self.assertEqual(company.created_by, user)
 
 
-class CompanyListViewTests(TestCase):
-    def test_list_requires_login(self):
-        response = self.client.get(reverse("companies:list"))
-        self.assertRedirects(
-            response, f"{reverse('login')}?next={reverse('companies:list')}"
-        )
-
-    def test_list_only_shows_own_companies(self):
-        owner = make_user("owner")
-        other = make_user("other")
-        make_company(created_by=owner)
-        make_company(created_by=other, email="other@example.com", rut="11.111.111-1")
-        self.client.force_login(owner)
-        response = self.client.get(reverse("companies:list"))
-        self.assertEqual(len(response.context["companies"]), 1)
-        self.assertEqual(response.context["companies"][0].created_by, owner)
-
-    def test_list_has_create_link(self):
-        user = make_user()
-        make_company(created_by=user)
-        self.client.force_login(user)
-        response = self.client.get(reverse("companies:list"))
-        self.assertContains(response, reverse("companies:create"))
-
-
 class CompanyDetailViewTests(TestCase):
     def test_detail_requires_login(self):
         company = make_company(created_by=make_user())

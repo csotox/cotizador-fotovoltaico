@@ -2,20 +2,11 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied
 from django.urls import reverse
-from django.views.generic import DetailView, ListView
+from django.views.generic import DetailView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
 from .forms import CompanyForm
 from .models import Company
-
-
-class CompanyListView(LoginRequiredMixin, ListView):
-    model = Company
-    template_name = "companies/list.html"
-    context_object_name = "companies"
-
-    def get_queryset(self):
-        return Company.objects.filter(created_by=self.request.user).order_by("-created_at")
 
 
 class CompanyCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
