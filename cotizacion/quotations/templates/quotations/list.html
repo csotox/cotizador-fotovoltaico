@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Cotizaciones{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3">Cotizaciones</h1>
+        <p class="text-muted">{{ company.name }}</p>
+    </div>
+    <a href="{% url 'quotations:create' %}" class="btn btn-primary">Crear cotización</a>
+</div>
+
+{% if quotations %}
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Cliente</th>
+                <th scope="col">Estado</th>
+                <th scope="col">Productos</th>
+                <th scope="col">Total</th>
+                <th scope="col">Fecha</th>
+                <th scope="col">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for quotation in quotations %}
+            <tr>
+                <td><a href="{% url 'quotations:detail' quotation.uuid %}">{{ quotation.customer.name }}</a></td>
+                <td>{{ quotation.get_status_display }}</td>
+                <td>{{ quotation.items.count }}</td>
+                <td>{{ quotation.total }} CLP</td>
+                <td>{{ quotation.created_at|date:"d/m/Y" }}</td>
+                <td>
+                    <a href="{% url 'quotations:detail' quotation.uuid %}" class="btn btn-outline-secondary btn-sm">Ver</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p class="alert alert-warning" role="alert">Aún no has creado cotizaciones.</p>
+{% endif %}
+{% endblock %}

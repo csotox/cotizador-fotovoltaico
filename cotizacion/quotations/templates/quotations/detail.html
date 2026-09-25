@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Cotización {{ quotation.uuid }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+        <h1 class="h3">Cotización</h1>
+        <p class="text-muted">{{ quotation.company.name }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'quotations:update' quotation.uuid %}" class="btn btn-outline-secondary">Editar</a>
+        <form method="post" action="{% url 'quotations:delete' quotation.uuid %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-danger" onclick="return confirm('¿Eliminar esta cotización?');">Eliminar</button>
+        </form>
+    </div>
+</div>
+
+<dl class="row">
+    <dt class="col-sm-3">Cliente</dt><dd class="col-sm-9">{{ quotation.customer.name }}</dd>
+    <dt class="col-sm-3">Estado</dt><dd class="col-sm-9">{{ quotation.get_status_display }}</dd>
+    <dt class="col-sm-3">Notas</dt><dd class="col-sm-9">{{ quotation.notes|default:"—"|linebreaksbr }}</dd>
+    <dt class="col-sm-3">Creada</dt><dd class="col-sm-9">{{ quotation.created_at|date:"d/m/Y H:i" }}</dd>
+</dl>
+
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <h2 class="h5 mb-0">Productos</h2>
+    {% if quotation.status == "draft" %}
+    <a href="{% url 'quotations:item-create' quotation.uuid %}" class="btn btn-primary btn-sm">Agregar producto</a>
+    {% endif %}
+</div>
+
+{% if items %}
+<div class="table-responsive">
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Producto</th>
+                <th scope="col">SKU</th>
+                <th scope="col">Cantidad</th>
+                <th scope="col">Precio</th>
+                <th scope="col">Subtotal</th>
+                <th scope="col">Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.product_name }}</td>
+                <td>{{ item.product_sku|default:"—" }}</td>
+                <td>{{ item.quantity }} {{ item.get_unit_display }}</td>
+                <td>{{ item.unit_price }} CLP</td>
+                <td>{{ item.subtotal }} CLP</td>
+                <td>
+                    {% if quotation.status == "draft" %}
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'quotations:item-update' quotation.uuid item.uuid %}" class="btn btn-outline-secondary btn-sm">Editar</a>
+                        <form method="post" action="{% url 'quotations:item-delete' quotation.uuid item.uuid %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar este producto?');">Eliminar</button>
+                        </form>
+                    </div>
+                    {% else %}—{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <th colspan="4" scope="row">Total</th>
+                <th>{{ quotation.total }} CLP</th>
+                <th></th>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+{% else %}
+<p class="alert alert-warning" role="alert">Esta cotización aún no tiene productos.</p>
+<div class="card card-body text-end">
+    <span class="h5">Total: 0 CLP</span>
+</div>
+{% endif %}
+
+<a href="{% url 'quotations:list' %}" class="btn btn-secondary mt-3">Volver</a>
+{% endblock %}

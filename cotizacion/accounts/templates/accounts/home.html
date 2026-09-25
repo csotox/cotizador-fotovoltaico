@@ -4,8 +4,11 @@
 
 {% block content %}
 <h1 class="h3">Bienvenido, {{ user.username }}</h1>
-<p class="text-muted">Aquí se mostrarán las cotizaciones del módulo correspondiente del MVP.</p>
+<p class="text-muted">Gestiona tus cotizaciones fotovoltaicas.</p>
 {% if not user.is_staff %}
+    <div class="mb-4">
+        <a href="{% url 'quotations:list' %}" class="btn btn-primary">Ver cotizaciones</a>
+    </div>
     <h2 class="h4 mt-4">Mis empresas</h2>
 
     {% if companies %}

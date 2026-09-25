@@ -18,6 +18,7 @@
                         <a class="nav-link" href="{% url 'home' %}">Compañías</a>
                         <a class="nav-link" href="{% url 'customers:list' %}">Clientes</a>
                         <a class="nav-link" href="{% url 'products:list' %}">Productos</a>
+                        <a class="nav-link" href="{% url 'quotations:list' %}">Cotizaciones</a>
                     {% endif %}
                     <span class="navbar-text">{{ user.username }}</span>
                     <form method="post" action="{% url 'logout' %}">

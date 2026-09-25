@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}Editar producto cotizado{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-1">Editar producto cotizado</h1>
+<p class="text-muted mb-4">{{ quotation.customer.name }}</p>
+<form method="post" class="card card-body">
+    {% csrf_token %}
+    {% include "partials/_form_fields.html" %}
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        <a href="{% url 'quotations:detail' quotation.uuid %}" class="btn btn-secondary">Cancelar</a>
+    </div>
+</form>
+{% endblock %}
