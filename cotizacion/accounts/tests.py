@@ -2,6 +2,11 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import resolve, reverse
 
+from companies.models import Company
+from customers.models import Customer
+from products.models import Product, ProductCategory, ProductKind
+from quotations.models import Quotation, QuotationStatus
+
 
 class SignUpViewTests(TestCase):
     def test_signup_page_renders(self):
@@ -187,3 +192,56 @@ class HomeViewTests(TestCase):
         response = self.client.get(reverse("home"))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Bienvenido")
+
+    def test_dashboard_metrics_are_scoped_to_current_company(self):
+        user = User.objects.create_user(username="vendedor", password="clave-segura-123")
+        company = Company.objects.create(
+            created_by=user,
+            name="Compañía actual",
+            rut="12.345.678-5",
+            email="actual@example.com",
+        )
+        customer = Customer.objects.create(
+            company=company,
+            name="Cliente actual",
+            address="Dirección",
+            email="cliente@example.com",
+            phone="+56912345678",
+            commune="Santiago",
+            payment_method="cash",
+        )
+        product = Product.objects.create(
+            company=company,
+            kind=ProductKind.PRODUCT,
+            category=ProductCategory.SOLAR_PANEL,
+            name="Panel",
+            unit_price="1000",
+            stock_quantity=1,
+        )
+        Quotation.objects.create(company=company, customer=customer, total="1000", status=QuotationStatus.ACCEPTED)
+        other_user = User.objects.create_user(username="otro", password="clave-segura-123")
+        other_company = Company.objects.create(
+            created_by=other_user,
+            name="Otra compañía",
+            rut="11.111.111-1",
+            email="otra@example.com",
+        )
+        other_customer = Customer.objects.create(
+            company=other_company,
+            name="Cliente oculto",
+            address="Dirección",
+            email="oculto@example.com",
+            phone="+56912345679",
+            commune="Santiago",
+            payment_method="cash",
+        )
+        Quotation.objects.create(company=other_company, customer=other_customer, total="999999")
+        self.client.force_login(user)
+        response = self.client.get(reverse("home"))
+        self.assertContains(response, "Clientes registrados")
+        self.assertContains(response, "Elementos de catálogo")
+        self.assertContains(response, "1")
+        self.assertNotContains(response, "Cliente oculto")
+        self.assertNotContains(response, "999.999")
+        self.assertEqual(response.context["metrics"]["accepted"], 1)
+        self.assertEqual(response.context["product_count"], 1)

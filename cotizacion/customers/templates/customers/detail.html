@@ -3,24 +3,43 @@
 {% block title %}{{ customer.name }}{% endblock %}
 
 {% block content %}
-<h1 class="h3">{{ customer.name }}</h1>
-<p class="text-muted">{{ customer.company.name }}</p>
+    <div class="page-header">
+        <div>
+            <div class="eyebrow">Cliente destinatario</div>
+            <h1 class="page-title mt-2">{{ customer.name }}</h1>
+            <p class="page-subtitle">{{ customer.company.name }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'quotations:create' %}" class="btn btn-primary">Crear cotización</a>
+            <button type="button" class="btn btn-outline-primary" data-modal-open="{% url 'customers:update' customer.uuid %}?form=modal" data-modal-title="Editar {{ customer.name }}">Editar cliente</button>
+        </div>
+    </div>
 
-<dl class="row">
-    <dt class="col-sm-3">Dirección</dt>
-    <dd class="col-sm-9">{{ customer.address }}</dd>
-    <dt class="col-sm-3">Email</dt>
-    <dd class="col-sm-9">{{ customer.email }}</dd>
-    <dt class="col-sm-3">Teléfono</dt>
-    <dd class="col-sm-9">{{ customer.phone }}</dd>
-    <dt class="col-sm-3">Comuna</dt>
-    <dd class="col-sm-9">{{ customer.commune }}</dd>
-    <dt class="col-sm-3">Forma de pago</dt>
-    <dd class="col-sm-9">{{ customer.get_payment_method_display }}</dd>
-</dl>
+    <section class="panel">
+        <h2 class="panel-title">Datos comerciales</h2>
+        <dl class="technical-data mt-4">
+            <div>
+                <dt>Dirección</dt>
+                <dd>{{ customer.address|default:"—" }}</dd>
+            </div>
+            <div>
+                <dt>Email</dt>
+                <dd>{{ customer.email|default:"—" }}</dd>
+            </div>
+            <div>
+                <dt>Teléfono</dt>
+                <dd>{{ customer.phone|default:"—" }}</dd>
+            </div>
+            <div>
+                <dt>Comuna</dt>
+                <dd>{{ customer.commune|default:"—" }}</dd>
+            </div>
+            <div>
+                <dt>Forma de pago</dt>
+                <dd>{{ customer.get_payment_method_display }}</dd>
+            </div>
+        </dl>
+    </section>
 
-<div class="d-flex gap-2">
-    <button type="button" class="btn btn-primary" data-modal-open="{% url 'customers:update' customer.uuid %}?form=modal" data-modal-title="Editar {{ customer.name }}">Editar</button>
-    <a href="{% url 'customers:list' %}" class="btn btn-secondary">Volver</a>
-</div>
+    <a href="{% url 'customers:list' %}" class="btn btn-outline-primary mt-5">Volver a clientes</a>
 {% endblock %}

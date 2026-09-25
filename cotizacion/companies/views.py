@@ -14,11 +14,11 @@ class CompanyCreateView(LoginRequiredMixin, ModalFormMixin, SuccessMessageMixin,
     model = Company
     form_class = CompanyForm
     template_name = "companies/_form.html"
-    success_message = "Empresa creada exitosamente."
+    success_message = "Compañía creada exitosamente."
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_staff:
-            raise PermissionDenied("Un usuario Staff no puede crear una empresa.")
+            raise PermissionDenied("Un usuario Staff no puede crear una compañía.")
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -48,11 +48,11 @@ class CompanyUpdateView(LoginRequiredMixin, ModalFormMixin, SuccessMessageMixin,
     template_name = "companies/_form.html"
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
-    success_message = "Empresa actualizada exitosamente."
+    success_message = "Compañía actualizada exitosamente."
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_staff:
-            raise PermissionDenied("Un usuario Staff no puede editar una empresa.")
+            raise PermissionDenied("Un usuario Staff no puede editar una compañía.")
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
@@ -67,11 +67,11 @@ class CompanyDeleteView(LoginRequiredMixin, SuccessMessageMixin, DeleteView):
     slug_field = "uuid"
     slug_url_kwarg = "uuid"
     http_method_names = ["post"]
-    success_message = "Empresa eliminada."
+    success_message = "Compañía eliminada."
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_staff:
-            raise PermissionDenied("Un usuario Staff no puede eliminar una empresa.")
+            raise PermissionDenied("Un usuario Staff no puede eliminar una compañía.")
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):

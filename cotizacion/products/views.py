@@ -1,11 +1,11 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied
-from django.http import Http404
 from django.urls import reverse
 from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
+from companies.mixins import CompanyRequiredMixin
 from companies.models import Company
 
 from .forms import ProductForm
@@ -13,17 +13,8 @@ from .mixins import ModalFormMixin
 from .models import Product
 
 
-class ProductCompanyMixin:
-    def get_company(self):
-        company = Company.objects.filter(created_by=self.request.user).first()
-        if company is None:
-            raise Http404
-        return company
-
-    def dispatch(self, request, *args, **kwargs):
-        if request.user.is_staff:
-            raise PermissionDenied("Un usuario Staff no puede gestionar productos.")
-        return super().dispatch(request, *args, **kwargs)
+class ProductCompanyMixin(CompanyRequiredMixin):
+    pass
 
 
 class ProductListView(LoginRequiredMixin, ProductCompanyMixin, ListView):
@@ -51,6 +42,13 @@ class ProductCreateView(
     form_class = ProductForm
     template_name = "products/_form.html"
     success_message = "Elemento creado exitosamente."
+
+    def dispatch(self, request, *args, **kwargs):
+        if self.get_company() is None:
+            from django.shortcuts import redirect
+
+            return redirect("home")
+        return super().dispatch(request, *args, **kwargs)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()

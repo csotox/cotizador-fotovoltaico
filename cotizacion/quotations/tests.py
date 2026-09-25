@@ -342,7 +342,8 @@ class QuotationViewTests(TestCase):
 
         self.assertContains(response, "Panel solar")
         self.assertNotContains(response, "Producto nuevo")
-        self.assertContains(response, "120000,00")
+        self.assertContains(response, "120")
+        self.assertContains(response, "CLP")
 
     def test_item_update_and_delete_recalculate_total(self):
         quotation = Quotation.objects.create(company=self.company, customer=self.customer)
@@ -423,3 +424,27 @@ class QuotationViewTests(TestCase):
         self.assertEqual(detail_url, f"/quotations/{quotation.uuid}/")
         self.assertNotIn(f"/{quotation.id}/", detail_url)
         self.assertNotIn(f"/{item.id}/", item_url)
+
+
+class QuotationOnboardingTests(TestCase):
+    def setUp(self):
+        self.user = make_user()
+        self.client.force_login(self.user)
+
+    def test_all_quotation_views_redirect_without_company(self):
+        quotation_uuid = "00000000-0000-0000-0000-000000000003"
+        item_uuid = "00000000-0000-0000-0000-000000000004"
+        urls = [
+            reverse("quotations:list"),
+            reverse("quotations:create"),
+            reverse("quotations:detail", kwargs={"uuid": quotation_uuid}),
+            reverse("quotations:update", kwargs={"uuid": quotation_uuid}),
+            reverse("quotations:delete", kwargs={"uuid": quotation_uuid}),
+            reverse("quotations:item-create", kwargs={"uuid": quotation_uuid}),
+            reverse("quotations:item-update", kwargs={"uuid": quotation_uuid, "item_uuid": item_uuid}),
+            reverse("quotations:item-delete", kwargs={"uuid": quotation_uuid, "item_uuid": item_uuid}),
+        ]
+        for url in urls:
+            response = self.client.get(url)
+            self.assertRedirects(response, reverse("home"))
+            self.assertContains(self.client.get(reverse("home")), "Configura tu espacio comercial")

@@ -30,6 +30,7 @@
         $.get(url)
             .done(function (html) {
                 setBody(html);
+                initializeStockField();
             })
             .fail(function () {
                 setBody(
@@ -47,6 +48,28 @@
         }
     }
 
+    function showConfirmDialog(message, form) {
+        var modalElement = document.createElement("div");
+        modalElement.className = "modal fade";
+        modalElement.tabIndex = -1;
+        modalElement.innerHTML = '<div class="modal-dialog modal-dialog-centered"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Confirmar acción</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button></div><div class="modal-body"><p class="mb-0"></p></div><div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button><button type="button" class="btn btn-danger">Eliminar</button></div></div></div>';
+        document.body.appendChild(modalElement);
+        modalElement.querySelector(".modal-body p").textContent = message;
+        var modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+        modalElement.querySelector("[data-bs-dismiss='modal']:not(.btn-close)").addEventListener("click", function () { modal.hide(); });
+        modalElement.querySelector(".btn-danger").addEventListener("click", function () { form.submit(); });
+        modalElement.addEventListener("hidden.bs.modal", function () { modalElement.remove(); });
+        modal.show();
+    }
+
+    function setLoading(form) {
+        form.querySelectorAll("button[type='submit']").forEach(function (button) {
+            button.disabled = true;
+            button.dataset.originalText = button.textContent;
+            button.textContent = "Guardando...";
+        });
+    }
+
     $(document).ready(function () {
         $(document).on("click", TRIGGER_SELECTOR, function (event) {
             event.preventDefault();
@@ -57,11 +80,43 @@
             );
         });
 
+        function initializeStockField() {
+            var $kind = $("#id_kind");
+            var $stock = $("#id_stock_quantity");
+            if ($kind.length && $stock.length) {
+                $stock.prop("disabled", $kind.val() !== "product");
+            }
+        }
+
+        $(document).on("shown.bs.modal", "#appModal", initializeStockField);
+
+        $(document).on("change", "#id_kind", function () {
+            var $kind = $(this);
+            var $stock = $("#id_stock_quantity");
+            $stock.prop("disabled", $kind.val() !== "product");
+            if ($kind.val() !== "product") {
+                $stock.val("");
+            }
+        });
+
+        $(document).on("submit", "form[data-confirm]", function (event) {
+            event.preventDefault();
+            showConfirmDialog(this.getAttribute("data-confirm"), this);
+        });
+
+        $(document).on("submit", "form:not(#appModal form)", function () {
+            if (!this.hasAttribute("data-confirm")) {
+                setLoading(this);
+            }
+        });
+
         $(document).on("submit", BODY_SELECTOR + " form", function (event) {
             event.preventDefault();
             var $form = $(this);
             var $submit = $form.find("button[type='submit']").first();
 
+            var originalText = $submit.text();
+            $submit.data("original-text", originalText);
             $submit.prop("disabled", true);
 
             $.ajax({
@@ -84,6 +139,7 @@
                     );
                 })
                 .always(function () {
+                    $submit.text($submit.data("original-text") || originalText);
                     $submit.prop("disabled", false);
                 });
         });

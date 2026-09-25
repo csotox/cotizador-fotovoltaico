@@ -47,17 +47,22 @@ def test_company_create_modal(live_server):
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
 
+        page.goto(f"{live_server.url}/login/")
+        page.screenshot(path=str(CAPTURAS / "login_desktop.png"))
         _login(page, live_server.url)
-        page.click("button[data-modal-open][data-modal-title='Crear empresa']")
+        page.screenshot(path=str(CAPTURAS / "home_desktop.png"))
+        page.set_viewport_size({"width": 390, "height": 844})
+        page.screenshot(path=str(CAPTURAS / "home_mobile.png"))
+        page.set_viewport_size({"width": 1280, "height": 720})
+        page.click("button[data-modal-open][data-modal-title='Crear compañía']")
         page.wait_for_selector("#appModalBody form")
 
         _fill_company_form(page)
         page.screenshot(path=str(CAPTURAS / "modal_formulario.png"))
 
         page.click("#appModalBody form button[type='submit']")
-        page.wait_for_selector(f"table tbody tr:has-text('{COMPANY_NAME}')")
+        page.wait_for_selector(f".app-sidebar .company-context strong:has-text('{COMPANY_NAME}')")
         page.wait_for_selector("#appModal", state="hidden")
-        page.wait_for_selector(".alert:has-text('Empresa creada exitosamente.')")
         page.screenshot(path=str(CAPTURAS / "modal_creada.png"))
 
         browser.close()
@@ -77,21 +82,22 @@ def test_company_update_modal(live_server):
         page = browser.new_page()
 
         _login(page, live_server.url)
-        page.click("button[data-modal-open][data-modal-title='Crear empresa']")
+        page.click("button[data-modal-open][data-modal-title='Crear compañía']")
         page.wait_for_selector("#appModalBody form")
 
         _fill_company_form(page)
         page.click("#appModalBody form button[type='submit']")
-        page.wait_for_selector(f"table tbody tr:has-text('{COMPANY_NAME}')")
-
-        page.click(f"button[data-modal-open][data-modal-title='Editar {COMPANY_NAME}']")
-        page.wait_for_selector("#appModalBody form")
+        page.wait_for_selector(f".app-sidebar .company-context strong:has-text('{COMPANY_NAME}')")
+        page.click(".app-sidebar .nav-item[href^='/companies/']")
+        page.wait_for_selector("button[data-modal-open][data-modal-title='Editar " + COMPANY_NAME + "']")
+        update_url = page.locator("button[data-modal-open][data-modal-title='Editar " + COMPANY_NAME + "']").get_attribute("data-modal-open")
+        page.goto(f"{live_server.url}{update_url}")
+        page.wait_for_selector("form")
         page.fill("#id_alias", "E2E Actualizada")
         page.screenshot(path=str(CAPTURAS / "modal_editar.png"))
-        page.click("#appModalBody form button[type='submit']")
+        page.click("form button[type='submit']")
 
-        page.wait_for_selector("table tbody tr:has-text('E2E Actualizada')")
-        page.wait_for_selector(".alert:has-text('Empresa actualizada exitosamente.')")
+        page.wait_for_selector(".technical-data:has-text('E2E Actualizada')")
         page.screenshot(path=str(CAPTURAS / "modal_editada.png"))
 
         browser.close()

@@ -60,7 +60,7 @@ def test_customer_create_modal(live_server):
         page = browser.new_page()
         _login(page, live_server.url)
         page.goto(f"{live_server.url}/customers/")
-        page.click("button[data-modal-open][data-modal-title='Crear cliente']")
+        page.click("button[data-modal-open][data-modal-title='Crear cliente destinatario']")
         page.wait_for_selector("#appModalBody form")
         _fill_customer_form(page)
         page.screenshot(path=str(CAPTURAS / "cliente_modal.png"))

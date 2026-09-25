@@ -5,6 +5,7 @@ from django.urls import reverse
 from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
+from companies.mixins import CompanyRequiredMixin
 from companies.models import Company
 
 from .forms import CustomerForm
@@ -12,19 +13,8 @@ from .mixins import ModalFormMixin
 from .models import Customer
 
 
-class CustomerCompanyMixin:
-    def get_company(self):
-        company = Company.objects.filter(created_by=self.request.user).first()
-        if company is None:
-            from django.http import Http404
-
-            raise Http404
-        return company
-
-    def dispatch(self, request, *args, **kwargs):
-        if request.user.is_staff:
-            raise PermissionDenied("Un usuario Staff no puede gestionar clientes.")
-        return super().dispatch(request, *args, **kwargs)
+class CustomerCompanyMixin(CompanyRequiredMixin):
+    pass
 
 
 class CustomerListView(LoginRequiredMixin, CustomerCompanyMixin, ListView):
@@ -47,6 +37,13 @@ class CustomerCreateView(
     form_class = CustomerForm
     template_name = "customers/_form.html"
     success_message = "Cliente creado exitosamente."
+
+    def dispatch(self, request, *args, **kwargs):
+        if self.get_company() is None:
+            from django.shortcuts import redirect
+
+            return redirect("home")
+        return super().dispatch(request, *args, **kwargs)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()

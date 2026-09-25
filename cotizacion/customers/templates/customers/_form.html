@@ -1,8 +1,8 @@
-<form method="post" action="{% if form.instance.pk %}{% url 'customers:update' form.instance.uuid %}{% else %}{% url 'customers:create' %}{% endif %}" novalidate>
+<form method="post" action="{% if form.instance.pk %}{% url 'customers:update' form.instance.uuid %}{% else %}{% url 'customers:create' %}{% endif %}">
     {% csrf_token %}
     {% include "partials/_form_fields.html" %}
-    <div class="d-flex justify-content-end gap-2 mt-3">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="submit" class="btn btn-primary">Guardar</button>
+    <div class="form-actions">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary">{% if form.instance.pk %}Guardar cambios{% else %}Crear cliente{% endif %}</button>
     </div>
 </form>

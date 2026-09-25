@@ -1,4 +1,22 @@
+from django.contrib import messages
+from django.core.exceptions import PermissionDenied
 from django.http import JsonResponse
+from django.shortcuts import redirect
+
+from .models import Company
+
+
+class CompanyRequiredMixin:
+    def get_company(self):
+        return Company.objects.filter(created_by=self.request.user).first()
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_staff:
+            raise PermissionDenied("Un usuario Staff no puede gestionar información de compañía.")
+        if self.get_company() is None:
+            messages.info(request, "Configura tu compañía para acceder a esta sección.")
+            return redirect("home")
+        return super().dispatch(request, *args, **kwargs)
 
 
 class ModalFormMixin:

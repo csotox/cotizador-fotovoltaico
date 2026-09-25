@@ -154,7 +154,7 @@ class CustomerViewTests(TestCase):
         response = self.client.get(
             reverse("customers:detail", kwargs={"uuid": customer.uuid})
         )
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 302)
 
     def test_delete_is_soft_and_redirects_to_list(self):
         customer = make_customer(self.company)
@@ -193,3 +193,23 @@ class CustomerModalTests(TestCase):
         )
         self.assertEqual(response.json(), {"success": True})
         self.assertEqual(Customer.objects.count(), 1)
+
+
+class CustomerOnboardingTests(TestCase):
+    def setUp(self):
+        self.user = make_user()
+        self.client.force_login(self.user)
+
+    def test_all_customer_views_redirect_without_company(self):
+        customer_uuid = "00000000-0000-0000-0000-000000000001"
+        urls = [
+            reverse("customers:list"),
+            reverse("customers:create"),
+            reverse("customers:detail", kwargs={"uuid": customer_uuid}),
+            reverse("customers:update", kwargs={"uuid": customer_uuid}),
+            reverse("customers:delete", kwargs={"uuid": customer_uuid}),
+        ]
+        for url in urls:
+            response = self.client.get(url)
+            self.assertRedirects(response, reverse("home"))
+            self.assertContains(self.client.get(reverse("home")), "Configura tu espacio comercial")

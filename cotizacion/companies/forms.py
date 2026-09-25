@@ -23,7 +23,7 @@ class CompanyForm(forms.ModelForm):
         if self.instance.pk:
             queryset = queryset.exclude(pk=self.instance.pk)
         if queryset.exists():
-            raise ValidationError("Ya existe una empresa con este correo.")
+            raise ValidationError("Ya existe una compañía con este correo.")
         return email
 
     def clean_rut(self):
@@ -32,5 +32,5 @@ class CompanyForm(forms.ModelForm):
         if self.instance.pk:
             queryset = queryset.exclude(pk=self.instance.pk)
         if queryset.exists():
-            raise ValidationError("Ya existe una empresa con este RUT.")
+            raise ValidationError("Ya existe una compañía con este RUT.")
         return rut

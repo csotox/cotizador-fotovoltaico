@@ -1,0 +1,40 @@
+{% if current_company %}
+    <div class="company-context">
+        <span class="eyebrow">Compañía emisora</span>
+        <strong>{{ current_company.name }}</strong>
+    </div>
+{% endif %}
+<nav class="app-nav" aria-label="Navegación principal">
+    <a
+        class="nav-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}"
+        href="{% url 'home' %}"
+        {% if request.resolver_match.url_name == 'home' %}aria-current="page"{% endif %}
+    >Resumen</a>
+    <a
+        class="nav-item {% if request.resolver_match.namespace == 'quotations' %}active{% endif %}"
+        href="{% url 'quotations:list' %}"
+        {% if request.resolver_match.namespace == 'quotations' %}aria-current="page"{% endif %}
+    >Cotizaciones</a>
+    <a
+        class="nav-item {% if request.resolver_match.namespace == 'customers' %}active{% endif %}"
+        href="{% url 'customers:list' %}"
+        {% if request.resolver_match.namespace == 'customers' %}aria-current="page"{% endif %}
+    >Clientes</a>
+    <a
+        class="nav-item {% if request.resolver_match.namespace == 'products' %}active{% endif %}"
+        href="{% url 'products:list' %}"
+        {% if request.resolver_match.namespace == 'products' %}aria-current="page"{% endif %}
+    >Catálogo</a>
+    <a
+        class="nav-item {% if request.resolver_match.namespace == 'companies' %}active{% endif %}"
+        href="{% if current_company %}{% url 'companies:detail' current_company.uuid %}{% else %}{% url 'companies:create' %}{% endif %}"
+        {% if request.resolver_match.namespace == 'companies' %}aria-current="page"{% endif %}
+    >Compañía</a>
+</nav>
+<div class="sidebar-footer">
+    <div class="user-label">{{ user.get_username }}</div>
+    <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="nav-item nav-button">Cerrar sesión</button>
+    </form>
+</div>

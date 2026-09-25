@@ -216,7 +216,7 @@ class ProductViewTests(TestCase):
         response = self.client.get(
             reverse("products:detail", kwargs={"uuid": product.uuid})
         )
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 302)
 
     def test_staff_is_forbidden(self):
         staff = User.objects.create_user(
@@ -246,3 +246,23 @@ class ProductModalTests(TestCase):
         )
         self.assertEqual(response.json(), {"success": True})
         self.assertEqual(Product.objects.count(), 1)
+
+
+class ProductOnboardingTests(TestCase):
+    def setUp(self):
+        self.user = make_user()
+        self.client.force_login(self.user)
+
+    def test_all_product_views_redirect_without_company(self):
+        product_uuid = "00000000-0000-0000-0000-000000000002"
+        urls = [
+            reverse("products:list"),
+            reverse("products:create"),
+            reverse("products:detail", kwargs={"uuid": product_uuid}),
+            reverse("products:update", kwargs={"uuid": product_uuid}),
+            reverse("products:delete", kwargs={"uuid": product_uuid}),
+        ]
+        for url in urls:
+            response = self.client.get(url)
+            self.assertRedirects(response, reverse("home"))
+            self.assertContains(self.client.get(reverse("home")), "Configura tu espacio comercial")

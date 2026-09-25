@@ -3,48 +3,57 @@
 {% block title %}Clientes{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        <h1 class="h3">Clientes</h1>
-        <p class="text-muted">{{ company.name }}</p>
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Clientes</h1>
+            <p class="page-subtitle">{{ current_company.name|default:"Configura tu compañía para comenzar" }}</p>
+        </div>
+        {% if current_company %}
+            <button type="button" class="btn btn-primary" data-modal-open="{% url 'customers:create' %}?form=modal" data-modal-title="Crear cliente destinatario">Crear cliente</button>
+        {% endif %}
     </div>
-    <button type="button" class="btn btn-primary" data-modal-open="{% url 'customers:create' %}?form=modal" data-modal-title="Crear cliente">Crear cliente</button>
-</div>
-
-{% if customers %}
-<table class="table">
-    <thead>
-        <tr>
-            <th scope="col">Nombre</th>
-            <th scope="col">Email</th>
-            <th scope="col">Teléfono</th>
-            <th scope="col">Comuna</th>
-            <th scope="col">Forma de pago</th>
-            <th scope="col">Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for customer in customers %}
-            <tr>
-                <td><a href="{% url 'customers:detail' customer.uuid %}">{{ customer.name }}</a></td>
-                <td>{{ customer.email }}</td>
-                <td>{{ customer.phone }}</td>
-                <td>{{ customer.commune }}</td>
-                <td>{{ customer.get_payment_method_display }}</td>
-                <td>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-outline-secondary btn-sm" data-modal-open="{% url 'customers:update' customer.uuid %}?form=modal" data-modal-title="Editar {{ customer.name }}">Editar</button>
-                        <form method="post" action="{% url 'customers:delete' customer.uuid %}">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar este cliente?');">Eliminar</button>
-                        </form>
-                    </div>
-                </td>
-            </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% else %}
-<p class="alert alert-warning" role="alert">Aún no has creado clientes.</p>
-{% endif %}
+    {% if not current_company %}
+        <section class="empty-state">
+            <h2>Configura tu compañía primero</h2>
+            <p>Los clientes pertenecen a una compañía emisora.</p>
+            <a class="btn btn-primary" href="{% url 'companies:create' %}">Crear compañía</a>
+        </section>
+    {% elif customers %}
+        <section class="panel table-wrap">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Teléfono</th>
+                        <th>Comuna</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for customer in customers %}
+                        <tr>
+                            <td data-label="Nombre"><a href="{% url 'customers:detail' customer.uuid %}">{{ customer.name }}</a></td>
+                            <td data-label="Email">{{ customer.email }}</td>
+                            <td data-label="Teléfono">{{ customer.phone }}</td>
+                            <td data-label="Comuna">{{ customer.commune }}</td>
+                            <td data-label="Acciones">
+                                <button type="button" class="btn btn-outline-primary btn-sm" data-modal-open="{% url 'customers:update' customer.uuid %}?form=modal" data-modal-title="Editar cliente">Editar</button>
+                                <form method="post" action="{% url 'customers:delete' customer.uuid %}" data-confirm="¿Eliminar este cliente destinatario?">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Eliminar</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+    {% else %}
+        <section class="empty-state">
+            <h2>Agrega tu primer cliente</h2>
+            <p>Un cliente destinatario es necesario para crear una cotización.</p>
+            <button type="button" class="btn btn-primary" data-modal-open="{% url 'customers:create' %}?form=modal" data-modal-title="Crear cliente destinatario">Crear cliente</button>
+        </section>
+    {% endif %}
 {% endblock %}

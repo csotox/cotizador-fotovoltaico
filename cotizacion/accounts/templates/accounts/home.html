@@ -1,51 +1,110 @@
 {% extends "base.html" %}
+{% load humanize %}
 
-{% block title %}Inicio{% endblock %}
+{% block title %}Resumen{% endblock %}
 
 {% block content %}
-<h1 class="h3">Bienvenido, {{ user.username }}</h1>
-<p class="text-muted">Gestiona tus cotizaciones fotovoltaicas.</p>
-{% if not user.is_staff %}
-    <div class="mb-4">
-        <a href="{% url 'quotations:list' %}" class="btn btn-primary">Ver cotizaciones</a>
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Buenos días, {{ user.get_username }}</h1>
+            <p class="page-subtitle">Bienvenido a tu mesa de trabajo{% if company %} de {{ company.name }}{% endif %}. Actividad comercial{% if company %}{% else %} de tu próxima cotización{% endif %}.</p>
+        </div>
+        {% if company %}
+            <a href="{% url 'quotations:create' %}" class="btn btn-primary">Crear cotización</a>
+        {% endif %}
     </div>
-    <h2 class="h4 mt-4">Mis empresas</h2>
 
-    {% if companies %}
-        <table class="table">
-            <thead>
-                <tr>
-                    <th scope="col">Nombre</th>
-                    <th scope="col">Alias</th>
-                    <th scope="col">RUT</th>
-                    <th scope="col">Email</th>
-                    <th scope="col">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for company in companies %}
-                    <tr>
-                        <td><a href="{% url 'companies:detail' company.uuid %}">{{ company.name }}</a></td>
-                        <td>{{ company.alias }}</td>
-                        <td>{{ company.rut }}</td>
-                        <td>{{ company.email }}</td>
-                        <td>
-                            <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-outline-secondary btn-sm" data-modal-open="{% url 'companies:update' company.uuid %}?form=modal" data-modal-title="Editar {{ company.name }}">Editar</button>
-                                <form method="post" action="{% url 'companies:delete' company.uuid %}">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar esta empresa?');">Eliminar</button>
-                                </form>
-                            </div>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    {% if company %}
+        <div class="metric-strip panel p-0">
+            <div class="metric">
+                <span class="metric-label">En borrador</span>
+                <span class="metric-value">{{ metrics.draft }}</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Emitidas</span>
+                <span class="metric-value">{{ metrics.issued }}</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Aceptadas</span>
+                <span class="metric-value">{{ metrics.accepted }}</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Total cotizado</span>
+                <span class="metric-value">${{ metrics.total|floatformat:0|intcomma }} CLP</span>
+            </div>
+        </div>
+
+        <div class="content-grid">
+            <section class="panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">Cotizaciones recientes</h2>
+                    <a href="{% url 'quotations:list' %}">Ver historial</a>
+                </div>
+                {% if recent_quotations %}
+                    <div class="table-wrap">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Cliente destinatario</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                    <th class="amount">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for quotation in recent_quotations %}
+                                    <tr>
+                                        <td data-label="Cliente destinatario"><a href="{% url 'quotations:detail' quotation.uuid %}">{{ quotation.customer.name }}</a></td>
+                                        <td data-label="Fecha">{{ quotation.created_at|date:"d/m/Y" }}</td>
+                                        <td data-label="Estado"><span class="status-badge status-{{ quotation.status }}">{{ quotation.get_status_display }}</span></td>
+                                        <td class="amount" data-label="Total">${{ quotation.total|floatformat:0|intcomma }} CLP</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <h2>Tu historial comienza aquí</h2>
+                        <p>Agrega un cliente y crea tu primera cotización.</p>
+                        <a class="btn btn-primary" href="{% url 'quotations:create' %}">Crear cotización</a>
+                    </div>
+                {% endif %}
+            </section>
+
+            <aside class="panel">
+                <h2 class="panel-title">Estado del catálogo</h2>
+                <dl class="technical-data mt-4">
+                    <div>
+                        <dt>Clientes registrados</dt>
+                        <dd>{{ customer_count }}</dd>
+                    </div>
+                    <div>
+                        <dt>Elementos de catálogo</dt>
+                        <dd>{{ product_count }}</dd>
+                    </div>
+                </dl>
+                <a class="btn btn-outline-primary w-100 mt-4" href="{% url 'customers:list' %}">Administrar clientes</a>
+                <a class="btn btn-outline-primary w-100 mt-2" href="{% url 'products:list' %}">Administrar catálogo</a>
+            </aside>
+        </div>
+
+        <div class="panel mt-5">
+            <h2 class="panel-title">Próximo paso</h2>
+            <p class="page-subtitle mt-2 mb-3">{{ next_step }}</p>
+            {% if customer_count == 0 %}
+                <button type="button" class="btn btn-outline-primary" data-modal-open="{% url 'customers:create' %}?form=modal" data-modal-title="Crear cliente destinatario">Crear cliente</button>
+            {% elif product_count == 0 %}
+                <button type="button" class="btn btn-outline-primary" data-modal-open="{% url 'products:create' %}?form=modal" data-modal-title="Agregar producto">Agregar producto</button>
+            {% else %}
+                <a class="btn btn-outline-primary" href="{% url 'quotations:create' %}">Crear cotización</a>
+            {% endif %}
+        </div>
     {% else %}
-        <p class="alert alert-warning" role="alert">Aún no has creado una empresa.</p>
+        <section class="empty-state grid-pattern">
+            <h1 class="page-title">Configura tu espacio comercial</h1>
+            <p>Comienza creando la compañía emisora. Luego agrega clientes, carga tu catálogo y prepara cotizaciones.</p>
+            <button type="button" class="btn btn-primary" data-modal-open="{% url 'companies:create' %}?form=modal" data-modal-title="Crear compañía">Crear compañía</button>
+        </section>
     {% endif %}
-
-    <button type="button" class="btn btn-primary" data-modal-open="{% url 'companies:create' %}?form=modal" data-modal-title="Crear empresa">Crear empresa</button>
-{% endif %}
 {% endblock %}

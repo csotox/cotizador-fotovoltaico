@@ -2,13 +2,13 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied
-from django.http import Http404, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
-from companies.mixins import ModalFormMixin
+from companies.mixins import CompanyRequiredMixin, ModalFormMixin
 from companies.models import Company
 
 from .forms import QuotationForm, QuotationItemForm
@@ -16,17 +16,8 @@ from .models import Quotation, QuotationItem, QuotationStatus
 from .services import add_quotation_item, delete_quotation_item, update_quotation_item
 
 
-class QuotationCompanyMixin:
-    def get_company(self):
-        company = Company.objects.filter(created_by=self.request.user).first()
-        if company is None:
-            raise Http404
-        return company
-
-    def dispatch(self, request, *args, **kwargs):
-        if request.user.is_staff:
-            raise PermissionDenied("Un usuario Staff no puede gestionar cotizaciones.")
-        return super().dispatch(request, *args, **kwargs)
+class QuotationCompanyMixin(CompanyRequiredMixin):
+    pass
 
 
 class QuotationListView(LoginRequiredMixin, QuotationCompanyMixin, ListView):
@@ -47,6 +38,11 @@ class QuotationCreateView(LoginRequiredMixin, QuotationCompanyMixin, CreateView)
     model = Quotation
     form_class = QuotationForm
     template_name = "quotations/form.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        if self.get_company() is None:
+            return redirect("home")
+        return super().dispatch(request, *args, **kwargs)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -85,6 +81,14 @@ class QuotationUpdateView(LoginRequiredMixin, QuotationCompanyMixin, UpdateView)
 
     def get_queryset(self):
         return Quotation.objects.filter(company=self.get_company())
+
+    def dispatch(self, request, *args, **kwargs):
+        if self.get_company() is None or request.user.is_staff:
+            return CompanyRequiredMixin.dispatch(self, request, *args, **kwargs)
+        self.object = self.get_object()
+        if self.object.status != QuotationStatus.DRAFT:
+            raise PermissionDenied("Solo las cotizaciones en borrador pueden editarse.")
+        return super().dispatch(request, *args, **kwargs)
 
     def get_form_kwargs(self):
         kwargs = super().get_form_kwargs()
@@ -183,6 +187,8 @@ class QuotationItemUpdateView(LoginRequiredMixin, QuotationCompanyMixin, UpdateV
         ).select_related("quotation", "product")
 
     def dispatch(self, request, *args, **kwargs):
+        if self.get_company() is None or request.user.is_staff:
+            return CompanyRequiredMixin.dispatch(self, request, *args, **kwargs)
         self.object = self.get_object()
         if self.object.quotation.status != QuotationStatus.DRAFT:
             raise PermissionDenied("Solo las cotizaciones en borrador pueden modificar productos.")
@@ -235,6 +241,8 @@ class QuotationItemDeleteView(
         ).select_related("quotation")
 
     def dispatch(self, request, *args, **kwargs):
+        if self.get_company() is None or request.user.is_staff:
+            return CompanyRequiredMixin.dispatch(self, request, *args, **kwargs)
         self.object = self.get_object()
         if self.object.quotation.status != QuotationStatus.DRAFT:
             raise PermissionDenied("Solo las cotizaciones en borrador pueden eliminar productos.")

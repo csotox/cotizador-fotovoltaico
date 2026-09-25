@@ -109,7 +109,7 @@ class CompanyFormValidationTests(TestCase):
         make_company(created_by=self.user)
         response = self._post(name="Otra Empresa", email="otra@example.com")
         self.assertFormError(
-            response.context["form"], "rut", "Ya existe una empresa con este RUT."
+            response.context["form"], "rut", "Ya existe una compañía con este RUT."
         )
 
     def test_blank_email_rejected(self):
@@ -128,7 +128,7 @@ class CompanyFormValidationTests(TestCase):
         self.assertFormError(
             response.context["form"],
             "email",
-            "Ya existe una empresa con este correo.",
+            "Ya existe una compañía con este correo.",
         )
 
     def test_email_normalized_to_lowercase(self):

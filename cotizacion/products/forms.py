@@ -34,7 +34,11 @@ class ProductForm(forms.ModelForm):
         if company is not None and not self.instance.pk:
             self.instance.company = company
         for field in self.fields.values():
-            field.widget.attrs.setdefault("class", FORM_CONTROL)
+            if field.widget.__class__.__name__ in {"Select", "NullBooleanSelect"}:
+                field.widget.attrs["class"] = "form-select"
+            else:
+                field.widget.attrs.setdefault("class", FORM_CONTROL)
+        self.fields["is_active"].widget.attrs["class"] = "form-check-input"
         self.fields["kind"].choices = ProductKind.choices
         self.fields["category"].choices = ProductCategory.choices
         self.fields["unit"].choices = ProductUnit.choices

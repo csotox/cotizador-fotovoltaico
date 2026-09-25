@@ -3,13 +3,18 @@
 {% block title %}Editar cotización{% endblock %}
 
 {% block content %}
-<h1 class="h3 mb-4">Editar cotización</h1>
-<form method="post" class="card card-body">
-    {% csrf_token %}
-    {% include "partials/_form_fields.html" %}
-    <div class="d-flex gap-2">
-        <button type="submit" class="btn btn-primary">Guardar cambios</button>
-        <a href="{% url 'quotations:detail' quotation.uuid %}" class="btn btn-secondary">Cancelar</a>
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">Editar cotización</h1>
+            <p class="page-subtitle">Actualiza los datos del documento técnico.</p>
+        </div>
     </div>
-</form>
+    <form method="post" class="panel">
+        {% csrf_token %}
+        {% include "partials/_form_fields.html" %}
+        <div class="form-actions">
+            <a href="{% url 'quotations:detail' quotation.uuid %}" class="btn btn-outline-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        </div>
+    </form>
 {% endblock %}

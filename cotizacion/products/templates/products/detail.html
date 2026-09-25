@@ -1,27 +1,65 @@
 {% extends "base.html" %}
+{% load humanize %}
 
 {% block title %}{{ product.name }}{% endblock %}
 
 {% block content %}
-<h1 class="h3">{{ product.name }}</h1>
-<p class="text-muted">{{ product.company.name }}</p>
+    <div class="page-header">
+        <div>
+            <div class="eyebrow">{{ product.get_kind_display }} · {{ product.get_category_display }}</div>
+            <h1 class="page-title mt-2">{{ product.name }}</h1>
+            <p class="page-subtitle">{{ product.company.name }}</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-primary" data-modal-open="{% url 'products:update' product.uuid %}?form=modal" data-modal-title="Editar {{ product.name }}">Editar producto</button>
+            <form method="post" action="{% url 'products:delete' product.uuid %}" data-confirm="¿Eliminar {{ product.name }} del catálogo? Dejará de estar disponible para nuevas cotizaciones.">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger">Eliminar</button>
+            </form>
+        </div>
+    </div>
 
-<dl class="row">
-    <dt class="col-sm-3">Tipo</dt><dd class="col-sm-9">{{ product.get_kind_display }}</dd>
-    <dt class="col-sm-3">Categoría</dt><dd class="col-sm-9">{{ product.get_category_display }}</dd>
-    <dt class="col-sm-3">Descripción</dt><dd class="col-sm-9">{{ product.description|default:"—" }}</dd>
-    <dt class="col-sm-3">SKU</dt><dd class="col-sm-9">{{ product.sku|default:"—" }}</dd>
-    <dt class="col-sm-3">Fabricante</dt><dd class="col-sm-9">{{ product.manufacturer|default:"—" }}</dd>
-    <dt class="col-sm-3">Modelo</dt><dd class="col-sm-9">{{ product.model|default:"—" }}</dd>
-    <dt class="col-sm-3">Precio unitario</dt><dd class="col-sm-9">{{ product.unit_price }} CLP</dd>
-    <dt class="col-sm-3">Unidad</dt><dd class="col-sm-9">{{ product.get_unit_display }}</dd>
-    <dt class="col-sm-3">Stock</dt><dd class="col-sm-9">{% if product.stock_quantity is not None %}{{ product.stock_quantity }}{% else %}—{% endif %}</dd>
-    <dt class="col-sm-3">Estado</dt><dd class="col-sm-9">{% if product.is_active %}Activo{% else %}Inactivo{% endif %}</dd>
-    <dt class="col-sm-3">Especificaciones</dt><dd class="col-sm-9"><pre class="mb-0">{{ product.technical_specs|default:"{}" }}</pre></dd>
-</dl>
+    <div class="content-grid">
+        <section class="panel">
+            <h2 class="panel-title">Información comercial</h2>
+            <dl class="technical-data mt-4">
+                <div>
+                    <dt>SKU</dt>
+                    <dd>{{ product.sku|default:"—" }}</dd>
+                </div>
+                <div>
+                    <dt>Fabricante</dt>
+                    <dd>{{ product.manufacturer|default:"—" }}</dd>
+                </div>
+                <div>
+                    <dt>Modelo</dt>
+                    <dd>{{ product.model|default:"—" }}</dd>
+                </div>
+                <div>
+                    <dt>Precio unitario</dt>
+                    <dd class="amount">${{ product.unit_price|floatformat:0|intcomma }} CLP</dd>
+                </div>
+                <div>
+                    <dt>Unidad</dt>
+                    <dd>{{ product.get_unit_display }}</dd>
+                </div>
+                <div>
+                    <dt>Stock</dt>
+                    <dd>{% if product.stock_quantity is not None %}{{ product.stock_quantity }}{% else %}—{% endif %}</dd>
+                </div>
+            </dl>
+            <p class="page-subtitle mt-4 mb-0">{{ product.description|default:"Sin descripción." }}</p>
+        </section>
 
-<div class="d-flex gap-2">
-    <button type="button" class="btn btn-primary" data-modal-open="{% url 'products:update' product.uuid %}?form=modal" data-modal-title="Editar {{ product.name }}">Editar</button>
-    <a href="{% url 'products:list' %}" class="btn btn-secondary">Volver</a>
-</div>
+        <aside class="panel">
+            <h2 class="panel-title">Estado</h2>
+            <p class="mt-4 mb-3"><span class="status-badge {% if product.is_active %}status-accepted{% else %}status-draft{% endif %}">{% if product.is_active %}Activo{% else %}Inactivo{% endif %}</span></p>
+            <details class="advanced-fields">
+                <summary class="form-section-title mb-0">Especificaciones técnicas</summary>
+                <pre class="mb-0 mt-3">{{ product.technical_specs|default:"{}" }}</pre>
+            </details>
+        </aside>
+    </div>
+
+    <a href="{% url 'products:list' %}" class="btn btn-outline-primary mt-5">Volver al catálogo</a>
 {% endblock %}
