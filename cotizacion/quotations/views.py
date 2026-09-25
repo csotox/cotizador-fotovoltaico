@@ -2,12 +2,13 @@ from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.messages.views import SuccessMessageMixin
 from django.core.exceptions import PermissionDenied
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views.generic import DetailView, ListView
 from django.views.generic.edit import CreateView, DeleteView, UpdateView
 
+from companies.mixins import ModalFormMixin
 from companies.models import Company
 
 from .forms import QuotationForm, QuotationItemForm
@@ -113,10 +114,15 @@ class QuotationDeleteView(
         return reverse("quotations:list")
 
 
-class QuotationItemCreateView(LoginRequiredMixin, QuotationCompanyMixin, CreateView):
+class QuotationItemCreateView(
+    LoginRequiredMixin,
+    QuotationCompanyMixin,
+    ModalFormMixin,
+    CreateView,
+):
     model = QuotationItem
     form_class = QuotationItemForm
-    template_name = "quotations/item_form.html"
+    template_name = "quotations/_item_form.html"
 
     def get_quotation(self):
         if not hasattr(self, "quotation"):
@@ -158,6 +164,8 @@ class QuotationItemCreateView(LoginRequiredMixin, QuotationCompanyMixin, CreateV
             quantity=form.cleaned_data["quantity"],
         )
         messages.success(self.request, "Producto agregado a la cotización.")
+        if self.is_modal():
+            return JsonResponse({"success": True})
         return redirect("quotations:detail", uuid=quotation.uuid)
 
 

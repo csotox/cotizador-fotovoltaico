@@ -262,6 +262,44 @@ class QuotationViewTests(TestCase):
         self.assertEqual(detail_response.status_code, 200)
         self.assertEqual(hidden_response.status_code, 404)
 
+    def test_item_create_modal_returns_partial(self):
+        quotation = Quotation.objects.create(company=self.company, customer=self.customer)
+        url = reverse("quotations:item-create", kwargs={"uuid": quotation.uuid})
+
+        response = self.client.get(url, {"form": "modal"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "quotations/_item_form.html")
+        self.assertNotContains(response, "<html")
+        self.assertContains(response, "<form")
+
+    def test_item_create_modal_returns_json_on_success(self):
+        quotation = Quotation.objects.create(company=self.company, customer=self.customer)
+        url = reverse("quotations:item-create", kwargs={"uuid": quotation.uuid})
+
+        response = self.client.post(
+            url,
+            {"product": self.product.uuid, "quantity": "4", "form": "modal"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), {"success": True})
+        self.assertEqual(QuotationItem.objects.count(), 1)
+
+    def test_item_create_modal_keeps_form_open_on_error(self):
+        quotation = Quotation.objects.create(company=self.company, customer=self.customer)
+        url = reverse("quotations:item-create", kwargs={"uuid": quotation.uuid})
+
+        response = self.client.post(
+            url,
+            {"product": self.product.uuid, "quantity": "", "form": "modal"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, "quotations/_item_form.html")
+        self.assertContains(response, "Este campo es obligatorio.")
+        self.assertEqual(QuotationItem.objects.count(), 0)
+
     def test_item_create_copies_product_and_calculates_total(self):
         quotation = Quotation.objects.create(company=self.company, customer=self.customer)
         url = reverse("quotations:item-create", kwargs={"uuid": quotation.uuid})

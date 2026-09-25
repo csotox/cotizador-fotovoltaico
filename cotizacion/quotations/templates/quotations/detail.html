@@ -27,7 +27,7 @@
 <div class="d-flex justify-content-between align-items-center mb-2">
     <h2 class="h5 mb-0">Productos</h2>
     {% if quotation.status == "draft" %}
-    <a href="{% url 'quotations:item-create' quotation.uuid %}" class="btn btn-primary btn-sm">Agregar producto</a>
+    <button type="button" class="btn btn-primary btn-sm" data-modal-open="{% url 'quotations:item-create' quotation.uuid %}?form=modal" data-modal-title="Agregar producto">Agregar producto</button>
     {% endif %}
 </div>
 
