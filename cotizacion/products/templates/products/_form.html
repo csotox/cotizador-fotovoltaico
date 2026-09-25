@@ -1,0 +1,71 @@
+<form method="post" action="{% if form.instance.pk %}{% url 'products:update' form.instance.uuid %}{% else %}{% url 'products:create' %}{% endif %}" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>
+    {% endif %}
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label" for="{{ form.kind.id_for_label }}">Tipo</label>
+            {{ form.kind }}
+            {% for error in form.kind.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="col-md-6">
+            <label class="form-label" for="{{ form.category.id_for_label }}">Categoría</label>
+            {{ form.category }}
+            {% for error in form.category.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="col-12">
+            <label class="form-label" for="{{ form.name.id_for_label }}">Nombre</label>
+            {{ form.name }}
+            {% for error in form.name.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="col-12">
+            <label class="form-label" for="{{ form.description.id_for_label }}">Descripción</label>
+            {{ form.description }}
+            {% for error in form.description.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="col-md-6">
+            <label class="form-label" for="{{ form.sku.id_for_label }}">SKU</label>
+            {{ form.sku }}
+            {% for error in form.sku.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="col-md-6">
+            <label class="form-label" for="{{ form.manufacturer.id_for_label }}">Fabricante</label>
+            {{ form.manufacturer }}
+            {% for error in form.manufacturer.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="col-md-6">
+            <label class="form-label" for="{{ form.model.id_for_label }}">Modelo</label>
+            {{ form.model }}
+            {% for error in form.model.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="col-md-6">
+            <label class="form-label" for="{{ form.unit.id_for_label }}">Unidad</label>
+            {{ form.unit }}
+            {% for error in form.unit.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="col-md-6">
+            <label class="form-label" for="{{ form.unit_price.id_for_label }}">Precio unitario</label>
+            {{ form.unit_price }}
+            {% for error in form.unit_price.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="col-md-6" id="stock-field">
+            <label class="form-label" for="{{ form.stock_quantity.id_for_label }}">Stock</label>
+            {{ form.stock_quantity }}
+            {% for error in form.stock_quantity.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="col-12">
+            <label class="form-label" for="{{ form.technical_specs.id_for_label }}">Especificaciones técnicas (JSON)</label>
+            {{ form.technical_specs }}
+            {% for error in form.technical_specs.errors %}<div class="invalid-feedback d-block">{{ error }}</div>{% endfor %}
+        </div>
+        <div class="col-12 form-check">
+            {{ form.is_active }}
+            <label class="form-check-label" for="{{ form.is_active.id_for_label }}">Activo</label>
+        </div>
+    </div>
+    <div class="d-flex justify-content-end gap-2 mt-3">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+    </div>
+</form>

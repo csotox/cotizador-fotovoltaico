@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Productos{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3">Productos y servicios</h1>
+        <p class="text-muted">{{ company.name }}</p>
+    </div>
+    <button type="button" class="btn btn-primary" data-modal-open="{% url 'products:create' %}?form=modal" data-modal-title="Crear elemento">Crear elemento</button>
+</div>
+
+{% if products %}
+<table class="table">
+    <thead>
+        <tr>
+            <th scope="col">Nombre</th>
+            <th scope="col">Tipo</th>
+            <th scope="col">Categoría</th>
+            <th scope="col">Precio</th>
+            <th scope="col">Stock</th>
+            <th scope="col">Estado</th>
+            <th scope="col">Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for product in products %}
+            <tr>
+                <td><a href="{% url 'products:detail' product.uuid %}">{{ product.name }}</a></td>
+                <td>{{ product.get_kind_display }}</td>
+                <td>{{ product.get_category_display }}</td>
+                <td>{{ product.unit_price }} CLP</td>
+                <td>{% if product.stock_quantity is not None %}{{ product.stock_quantity }}{% else %}—{% endif %}</td>
+                <td>{% if product.is_active %}Activo{% else %}Inactivo{% endif %}</td>
+                <td>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" data-modal-open="{% url 'products:update' product.uuid %}?form=modal" data-modal-title="Editar {{ product.name }}">Editar</button>
+                        <form method="post" action="{% url 'products:delete' product.uuid %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar este elemento?');">Eliminar</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="alert alert-warning" role="alert">Aún no has creado productos, consumibles o servicios.</p>
+{% endif %}
+{% endblock %}
