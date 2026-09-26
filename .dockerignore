@@ -6,6 +6,7 @@
 __pycache__
 *.pyc
 *.sqlite3
+cotizacion/staticfiles/
 .env
 .env.*
 !.env.example

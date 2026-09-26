@@ -29,13 +29,16 @@ RUN groupadd --system app \
 COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
-COPY --chown=app:app . /app
+COPY . /app
 
 ENV DJANGO_SETTINGS_MODULE=app_config.settings \
     PYTHONPATH=/app/cotizacion
 
-RUN DJANGO_SETTINGS_MODULE=app_config.settings PYTHONPATH=/app/cotizacion SECRET_KEY=build-only python /app/cotizacion/manage.py collectstatic --noinput \
-    && chown -R app:app /app/staticfiles
+RUN DJANGO_SETTINGS_MODULE=app_config.settings \
+    PYTHONPATH=/app/cotizacion \
+    SECRET_KEY=build-only \
+    DEBUG=False \
+    python /app/cotizacion/manage.py collectstatic --noinput
 
 USER app
 

@@ -200,14 +200,15 @@ sudo ss -tulpn | grep 3000
 # Deploy de la aplicación
 
 La imagen se construye con el `Dockerfile` de la raíz (Python 3.13 + Gunicorn + WhiteNoise).
-El stack se define en `docker-compose.prod.yml` y expone solo el servicio `web`
-(puerto interno `8000`). Traefik/Dokploy termina el TLS y enruta el dominio.
+El stack se define en `docker-compose.prod.yml`; el servicio `web` escucha en el puerto
+interno `8000` y PostgreSQL no publica puertos. Dokploy/Traefik termina el TLS y enruta
+el dominio al servicio `web`.
 
 ## Archivos
 
 - `Dockerfile` — imagen de producción (build multi-stage, usuario sin privilegios).
-- `docker-compose.prod.yml` — servicio `web` (Gunicorn) + `postgres` en red interna.
-- `docker/entrypoint.sh` — aplica migraciones, crea superusuario y collectstatic, luego lanza Gunicorn.
+- `docker-compose.prod.yml` — servicio `web` (Gunicorn) + `postgres`; las variables se leen del entorno de Compose/Dokploy.
+- `docker/entrypoint.sh` — aplica migraciones, crea superusuario opcional y lanza Gunicorn.
 - `.env.prod.example` — variables de entorno. Copiar a `.env.prod` y completar.
 
 ## Preparar el entorno
@@ -220,36 +221,38 @@ python -c "import secrets; print(secrets.token_urlsafe(64))"
 - `SECRET_KEY`: salida del comando anterior.
 - `ALLOWED_HOSTS`: dominio real, sin `https://` ni barra final.
 - `CSRF_TRUSTED_ORIGINS`: `https://` + dominio real.
-- `POSTGRES_PASSWORD`: contraseña de la base de datos.
+- `POSTGRES_PASSWORD`: contraseña aleatoria de la base de datos (por ejemplo, `openssl rand -hex 32`).
 - `DJANGO_SUPERUSER_*`: opcional, solo se usa en el primer deploy.
 
-## Levantar el stack
+## Levantar el stack manualmente
 
 ~~~ bash
-docker compose -f docker-compose.prod.yml build
-docker compose -f docker-compose.prod.yml up -d
+docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
 ~~~
 
 Ver estado y logs:
 
 ~~~ bash
-docker compose -f docker-compose.prod.yml ps
-docker compose -f docker-compose.prod.yml logs -f web
+docker compose --env-file .env.prod -f docker-compose.prod.yml ps
+docker compose --env-file .env.prod -f docker-compose.prod.yml logs -f web
 ~~~
 
-## Deploy en Dokploy
+## Deploy en Dokploy + Traefik
 
-1. Crear un recurso **Compose**.
-2. Definir el repositorio y el archivo Compose: `docker-compose.prod.yml`.
-3. Cargar las variables de entorno en la sección **Environment** (o usar `.env.prod`).
-4. En la pestaña **Domains** asociar el dominio y apuntar al servicio `web`, puerto `8000`.
-   Dokploy genera las etiquetas de Traefik automáticamente.
-5. Desplegar. `ALLOWED_HOSTS` y `CSRF_TRUSTED_ORIGINS` deben coincidir con ese dominio.
+1. Apuntar el registro DNS `A` del dominio a la IP pública del VPS (y `AAAA` si el VPS usa IPv6).
+2. En Dokploy crear una aplicación de tipo **Docker Compose** desde este repositorio y seleccionar `docker-compose.prod.yml`.
+3. En **Environment**, agregar las variables de `.env.prod.example`. No cargar el archivo `.env.prod` como archivo requerido por el stack: Dokploy inyecta las variables configuradas y Compose las pasa explícitamente a cada servicio.
+4. Reemplazar `cotizador.example.cl` por el dominio real en `ALLOWED_HOSTS` y `CSRF_TRUSTED_ORIGINS` (`https://dominio`). Completar `SECRET_KEY` y `POSTGRES_PASSWORD` con valores aleatorios.
+5. En **Domains**, crear un dominio para el servicio `web`, puerto de contenedor `8000`, activar HTTPS y seleccionar Let's Encrypt.
+6. Dokploy agrega la configuración de Traefik y conecta `web` a la red del proxy. No se publican puertos del host en el Compose.
+7. Desplegar/redeploy. Confirmar en Dokploy que DNS resuelve al VPS y que los puertos `80/tcp` y `443/tcp` están abiertos en firewall/proveedor.
+
+No es necesario agregar labels manuales de Traefik: para un Compose de Dokploy se recomienda configurar el dominio en la pestaña **Domains**. `expose: 8000` permite que Traefik enrute al contenedor sin publicar el puerto en el VPS.
 
 ## Backups
 
 ~~~ bash
-docker compose -f docker-compose.prod.yml exec postgres \
+docker compose --env-file .env.prod -f docker-compose.prod.yml exec postgres \
   pg_dump -U cotizador -Fc cotizador > backup_$(date +%F).dump
 ~~~
 
@@ -257,14 +260,12 @@ docker compose -f docker-compose.prod.yml exec postgres \
 
 ~~~ bash
 git pull
-docker compose -f docker-compose.prod.yml build
-docker compose -f docker-compose.prod.yml up -d
+docker compose --env-file .env.prod -f docker-compose.prod.yml up -d --build
 ~~~
 
 ## Notas
 
-- La base de datos no publica puertos; solo es accesible dentro del compose.
-- Los archivos estáticos los sirve WhiteNoise desde el contenedor `web`, con hash de caché.
+- La base de datos no publica puertos; solo es accesible desde los servicios del stack.
+- Los archivos estáticos se recopilan durante el build y WhiteNoise los sirve desde el contenedor `web`, con hash de caché.
 - `DEBUG`, `SECRET_KEY`, `ALLOWED_HOSTS` y cookies seguras se leen del entorno;
   los valores por defecto de `settings.py` son solo para desarrollo.
-
